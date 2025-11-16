@@ -73,7 +73,18 @@
 
             <!-- 기존 세션 목록 -->
             <div class="card">
-                <h2>내 주문 세션 목록</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h2 style="margin: 0;">내 주문 세션 목록</h2>
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" class="btn btn-small btn-secondary" onclick="exportData()">
+                            📥 데이터 백업
+                        </button>
+                        <button type="button" class="btn btn-small btn-secondary" onclick="document.getElementById('importFile').click()">
+                            📤 데이터 복원
+                        </button>
+                        <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
+                    </div>
+                </div>
                 <div id="sessionList"></div>
             </div>
         </main>
@@ -94,6 +105,129 @@
 
     <script src="app.js"></script>
     <script>
+        // ===== 데이터 백업/복원 기능 =====
+        
+        function exportData() {
+            const sessions = getAllSessions();
+            const templates = getTemplates();
+            
+            const backupData = {
+                version: '1.0',
+                exportDate: new Date().toISOString(),
+                sessions: sessions,
+                templates: templates
+            };
+            
+            // JSON 파일로 다운로드
+            const dataStr = JSON.stringify(backupData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            
+            // 파일명: menudamgi_backup_2024-01-01.json
+            const today = new Date().toISOString().split('T')[0];
+            link.download = `menudamgi_backup_${today}.json`;
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            alert(`데이터 백업 완료! 🎉\n\n세션: ${sessions.length}개\n템플릿: ${templates.length}개\n\n파일이 다운로드되었습니다.`);
+        }
+        
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (!file.name.endsWith('.json')) {
+                alert('JSON 파일만 업로드 가능합니다!');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const backupData = JSON.parse(e.target.result);
+                    
+                    // 데이터 유효성 검사
+                    if (!backupData.sessions || !Array.isArray(backupData.sessions)) {
+                        throw new Error('올바르지 않은 백업 파일 형식입니다.');
+                    }
+                    
+                    // 복원 확인
+                    const currentSessions = getAllSessions();
+                    const currentTemplates = getTemplates();
+                    
+                    let message = `데이터를 복원하시겠습니까?\n\n`;
+                    message += `백업 파일:\n`;
+                    message += `- 세션: ${backupData.sessions.length}개\n`;
+                    message += `- 템플릿: ${backupData.templates ? backupData.templates.length : 0}개\n`;
+                    message += `- 백업 날짜: ${new Date(backupData.exportDate).toLocaleString('ko-KR')}\n\n`;
+                    message += `현재 데이터:\n`;
+                    message += `- 세션: ${currentSessions.length}개\n`;
+                    message += `- 템플릿: ${currentTemplates.length}개\n\n`;
+                    message += `⚠️ 기존 데이터에 추가됩니다!`;
+                    
+                    if (!confirm(message)) {
+                        event.target.value = ''; // 파일 선택 초기화
+                        return;
+                    }
+                    
+                    // 세션 복원 (중복 ID 체크)
+                    let importedSessions = 0;
+                    let skippedSessions = 0;
+                    
+                    backupData.sessions.forEach(session => {
+                        const exists = getSession(session.id);
+                        if (!exists) {
+                            saveSession(session);
+                            importedSessions++;
+                        } else {
+                            skippedSessions++;
+                        }
+                    });
+                    
+                    // 템플릿 복원 (중복 ID 체크)
+                    let importedTemplates = 0;
+                    let skippedTemplates = 0;
+                    
+                    if (backupData.templates && Array.isArray(backupData.templates)) {
+                        backupData.templates.forEach(template => {
+                            const templates = getTemplates();
+                            const exists = templates.find(t => t.id === template.id);
+                            if (!exists) {
+                                saveTemplate(template);
+                                importedTemplates++;
+                            } else {
+                                skippedTemplates++;
+                            }
+                        });
+                    }
+                    
+                    // 페이지 새로고침
+                    loadSessions();
+                    
+                    let resultMessage = `데이터 복원 완료! 🎉\n\n`;
+                    resultMessage += `세션: ${importedSessions}개 추가`;
+                    if (skippedSessions > 0) resultMessage += ` (${skippedSessions}개 중복 제외)`;
+                    resultMessage += `\n템플릿: ${importedTemplates}개 추가`;
+                    if (skippedTemplates > 0) resultMessage += ` (${skippedTemplates}개 중복 제외)`;
+                    
+                    alert(resultMessage);
+                    
+                } catch (error) {
+                    alert('데이터 복원 실패! ❌\n\n' + error.message);
+                }
+                
+                // 파일 선택 초기화
+                event.target.value = '';
+            };
+            
+            reader.readAsText(file);
+        }
+
         // ===== 메뉴 관리 기능 =====
         
         // 자동 파싱 - 다양한 형식 지원
