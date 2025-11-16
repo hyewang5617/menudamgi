@@ -320,8 +320,8 @@
         });
 
         // 자동 새로고침 (30초마다)
-        setInterval(() => {
-            const updatedSession = getSession(currentSession.id);
+        setInterval(async () => {
+            const updatedSession = await getSession(currentSession.id);
             if (updatedSession) {
                 currentSession = updatedSession;
                 const searchTerm = document.getElementById('searchName')?.value || '';
@@ -333,6 +333,10 @@
                 }
             }
         }, 30000);
+        
+        // 함수를 window에 등록 (HTML onclick에서 사용하기 위함)
+        window.copyLink = copyLink;
+        window.copyOrderSummary = copyOrderSummary;
     </script>
 </body>
 </html>
