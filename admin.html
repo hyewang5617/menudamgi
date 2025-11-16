@@ -35,13 +35,30 @@
 
                 <div class="form-group">
                     <label>메뉴 입력 *</label>
-                    <p class="hint">한 줄에 하나씩, "메뉴명|가격" 형식으로 입력하세요</p>
-                    <textarea id="menuInput" rows="10" placeholder="예:
+                    <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
+                        <button type="button" class="btn btn-small btn-secondary" onclick="showTemplateModal()">
+                            📁 템플릿 불러오기
+                        </button>
+                        <button type="button" class="btn btn-small btn-secondary" onclick="showPreviousMenus()">
+                            🔄 이전 메뉴 재사용
+                        </button>
+                        <button type="button" class="btn btn-small btn-secondary" onclick="saveAsTemplate()">
+                            💾 템플릿으로 저장
+                        </button>
+                        <button type="button" class="btn btn-small btn-secondary" onclick="smartParse()">
+                            🪄 자동 파싱
+                        </button>
+                    </div>
+                    <p class="hint">한 줄에 하나씩, "메뉴명|가격" 또는 "메뉴명 가격" 형식으로 입력하세요</p>
+                    <textarea id="menuInput" rows="10" placeholder="예시 1 (추천):
 싸이버거|5900
 통새우버거|6500
 딥치즈버거|5500
-케이준감자|2000
-치즈스틱|2500"></textarea>
+
+예시 2 (자동 파싱):
+싸이버거 5900원
+통새우버거 6,500
+딥치즈버거 5500"></textarea>
                 </div>
 
                 <div class="form-group">
@@ -62,8 +79,245 @@
         </main>
     </div>
 
+    <!-- 템플릿/이전 메뉴 선택 모달 -->
+    <div id="menuModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">메뉴 선택</h3>
+                <button class="modal-close" onclick="closeMenuModal()">✕</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- 동적으로 채워짐 -->
+            </div>
+        </div>
+    </div>
+
     <script src="app.js"></script>
     <script>
+        // ===== 메뉴 관리 기능 =====
+        
+        // 자동 파싱 - 다양한 형식 지원
+        function smartParse() {
+            const input = document.getElementById('menuInput').value.trim();
+            if (!input) {
+                alert('메뉴 텍스트를 먼저 입력해주세요!');
+                return;
+            }
+
+            const lines = input.split('\n');
+            const parsed = [];
+
+            lines.forEach(line => {
+                line = line.trim();
+                if (!line) return;
+
+                // 이미 올바른 형식이면 그대로
+                if (line.includes('|')) {
+                    parsed.push(line);
+                    return;
+                }
+
+                // 다양한 패턴 매칭
+                // "싸이버거 5900원" or "싸이버거 5,900원" or "싸이버거 5900"
+                const patterns = [
+                    /^(.+?)\s+([0-9,]+)원?\s*$/,  // "메뉴명 5900원" or "메뉴명 5900"
+                    /^(.+?)\s*[:\-]\s*([0-9,]+)원?\s*$/,  // "메뉴명: 5900" or "메뉴명 - 5900"
+                ];
+
+                for (let pattern of patterns) {
+                    const match = line.match(pattern);
+                    if (match) {
+                        const name = match[1].trim();
+                        const price = match[2].replace(/,/g, '');
+                        parsed.push(`${name}|${price}`);
+                        return;
+                    }
+                }
+
+                // 매칭 안 되면 경고
+                console.warn('파싱 실패:', line);
+            });
+
+            if (parsed.length > 0) {
+                document.getElementById('menuInput').value = parsed.join('\n');
+                alert(`${parsed.length}개 메뉴가 파싱되었습니다!`);
+            } else {
+                alert('파싱할 수 있는 메뉴가 없습니다.\n\n올바른 형식:\n- 싸이버거|5900\n- 싸이버거 5900\n- 싸이버거 5900원');
+            }
+        }
+
+        // 이전 메뉴 재사용
+        function showPreviousMenus() {
+            const sessions = getAllSessions();
+            if (sessions.length === 0) {
+                alert('이전 주문 세션이 없습니다.');
+                return;
+            }
+
+            let html = '<div class="menu-select-list">';
+            sessions.slice().reverse().forEach(session => {
+                const date = new Date(session.createdAt).toLocaleString('ko-KR', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                html += `
+                    <div class="menu-select-item" onclick="loadMenuFromSession('${session.id}')">
+                        <div>
+                            <strong>${session.restaurant}</strong>
+                            <p style="font-size: 0.9rem; color: #666;">${session.name} - ${date}</p>
+                        </div>
+                        <div style="text-align: right; color: #999;">
+                            ${session.menu.length}개 메뉴
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+
+            document.getElementById('modalTitle').textContent = '이전 메뉴 불러오기';
+            document.getElementById('modalBody').innerHTML = html;
+            document.getElementById('menuModal').style.display = 'flex';
+        }
+
+        function loadMenuFromSession(sessionId) {
+            const session = getSession(sessionId);
+            if (!session) return;
+
+            const menuText = session.menu.map(m => `${m.name}|${m.price}`).join('\n');
+            document.getElementById('menuInput').value = menuText;
+            document.getElementById('restaurantName').value = session.restaurant;
+            
+            closeMenuModal();
+            alert(`"${session.restaurant}" 메뉴를 불러왔습니다!\n필요하면 수정하고 사용하세요.`);
+        }
+
+        // 템플릿 관리
+        const TEMPLATE_KEY = 'menudamgi_templates';
+
+        function getTemplates() {
+            const data = localStorage.getItem(TEMPLATE_KEY);
+            return data ? JSON.parse(data) : [];
+        }
+
+        function saveTemplate(template) {
+            const templates = getTemplates();
+            templates.push(template);
+            localStorage.setItem(TEMPLATE_KEY, JSON.stringify(templates));
+        }
+
+        function deleteTemplate(id) {
+            const templates = getTemplates();
+            const filtered = templates.filter(t => t.id !== id);
+            localStorage.setItem(TEMPLATE_KEY, JSON.stringify(filtered));
+        }
+
+        function saveAsTemplate() {
+            const restaurantName = document.getElementById('restaurantName').value.trim();
+            const menuText = document.getElementById('menuInput').value.trim();
+
+            if (!restaurantName || !menuText) {
+                alert('식당 이름과 메뉴를 먼저 입력해주세요!');
+                return;
+            }
+
+            const menuLines = menuText.split('\n').filter(line => line.trim());
+            const menu = [];
+            
+            for (let line of menuLines) {
+                const parts = line.split('|');
+                if (parts.length === 2) {
+                    menu.push({
+                        name: parts[0].trim(),
+                        price: parseInt(parts[1].trim())
+                    });
+                }
+            }
+
+            if (menu.length === 0) {
+                alert('올바른 형식의 메뉴가 없습니다!');
+                return;
+            }
+
+            const template = {
+                id: Date.now(),
+                restaurantName: restaurantName,
+                menu: menu,
+                createdAt: new Date().toISOString()
+            };
+
+            saveTemplate(template);
+            alert(`"${restaurantName}" 템플릿이 저장되었습니다! 🎉`);
+        }
+
+        function showTemplateModal() {
+            const templates = getTemplates();
+            
+            if (templates.length === 0) {
+                alert('저장된 템플릿이 없습니다.\n\n먼저 메뉴를 입력하고 "템플릿으로 저장" 버튼을 눌러주세요!');
+                return;
+            }
+
+            let html = '<div class="menu-select-list">';
+            templates.slice().reverse().forEach(template => {
+                const date = new Date(template.createdAt).toLocaleString('ko-KR', {
+                    month: 'short',
+                    day: 'numeric'
+                });
+                html += `
+                    <div class="menu-select-item">
+                        <div onclick="loadTemplate(${template.id})" style="flex: 1; cursor: pointer;">
+                            <strong>${template.restaurantName}</strong>
+                            <p style="font-size: 0.9rem; color: #666;">${template.menu.length}개 메뉴 - ${date}</p>
+                        </div>
+                        <button class="btn btn-small" style="background: #f44336; color: white;" onclick="removeTemplate(${template.id})">
+                            삭제
+                        </button>
+                    </div>
+                `;
+            });
+            html += '</div>';
+
+            document.getElementById('modalTitle').textContent = '템플릿 불러오기';
+            document.getElementById('modalBody').innerHTML = html;
+            document.getElementById('menuModal').style.display = 'flex';
+        }
+
+        function loadTemplate(templateId) {
+            const templates = getTemplates();
+            const template = templates.find(t => t.id === templateId);
+            if (!template) return;
+
+            const menuText = template.menu.map(m => `${m.name}|${m.price}`).join('\n');
+            document.getElementById('menuInput').value = menuText;
+            document.getElementById('restaurantName').value = template.restaurantName;
+            
+            closeMenuModal();
+            alert(`"${template.restaurantName}" 템플릿을 불러왔습니다!`);
+        }
+
+        function removeTemplate(templateId) {
+            if (!confirm('이 템플릿을 삭제하시겠습니까?')) return;
+            
+            deleteTemplate(templateId);
+            showTemplateModal(); // 모달 새로고침
+        }
+
+        function closeMenuModal() {
+            document.getElementById('menuModal').style.display = 'none';
+        }
+
+        // 모달 외부 클릭시 닫기
+        window.onclick = function(event) {
+            const modal = document.getElementById('menuModal');
+            if (event.target === modal) {
+                closeMenuModal();
+            }
+        };
+
+        // ===== 기존 코드 =====
+
         // 메뉴 입력 실시간 미리보기
         document.getElementById('menuInput').addEventListener('input', function() {
             const menuText = this.value;
