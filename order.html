@@ -177,14 +177,14 @@
             
             if (existingOrder) {
                 // 기존 주문이 있으면 알림 표시
-                const confirm = window.confirm(
+                const shouldLoadExisting = window.confirm(
                     `'${userName}' 님의 기존 주문이 있습니다!\n\n` +
                     `기존 주문을 불러와서 수정하시겠습니까?\n\n` +
                     `[확인] - 기존 주문 수정\n` +
                     `[취소] - 새로 주문하기`
                 );
                 
-                if (!confirm) {
+                if (!shouldLoadExisting) {
                     // 새로 주문하기 선택
                     existingOrder = null;
                 }
