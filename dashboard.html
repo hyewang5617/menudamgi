@@ -279,9 +279,23 @@
         }
 
         function copyLink() {
-            const link = `${window.location.origin}/order.html?session=${currentSession.id}`;
+            let link;
+            if (window.location.protocol === 'file:') {
+                // file:// 프로토콜이면 전체 경로 사용
+                const currentPath = window.location.pathname;
+                const dirPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+                link = `file://${dirPath}/order.html?session=${currentSession.id}`;
+            } else {
+                // http:// 또는 https:// 프로토콜
+                link = `${window.location.origin}${window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'))}/order.html?session=${currentSession.id}`;
+            }
+            
             navigator.clipboard.writeText(link).then(() => {
-                alert('주문 링크가 복사되었습니다!\n카톡으로 팀원들에게 공유하세요 📤');
+                if (window.location.protocol === 'file:') {
+                    alert('⚠️ 로컬 파일 모드입니다!\n\n링크가 복사되었지만, file:// 링크는 같은 컴퓨터에서만 작동합니다.\n\n팀원들과 공유하려면:\n1. GitHub Pages 배포 (추천!)\n2. 로컬 서버 실행 (http://localhost:8000)');
+                } else {
+                    alert('주문 링크가 복사되었습니다!\n카톡으로 팀원들에게 공유하세요 📤');
+                }
             });
         }
 
