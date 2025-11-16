@@ -1,0 +1,711 @@
+/* 메뉴담기 - 단체 주문 관리 시스템 스타일 */
+
+/* 기본 리셋 및 변수 */
+:root {
+    --primary-color: #4CAF50;
+    --primary-dark: #45a049;
+    --secondary-color: #2196F3;
+    --secondary-dark: #1976D2;
+    --danger-color: #f44336;
+    --warning-color: #ff9800;
+    --text-primary: #333;
+    --text-secondary: #666;
+    --text-light: #999;
+    --bg-light: #f5f5f5;
+    --bg-white: #ffffff;
+    --border-color: #e0e0e0;
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+    --shadow-md: 0 4px 8px rgba(0,0,0,0.15);
+    --shadow-lg: 0 8px 16px rgba(0,0,0,0.2);
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', 
+                 'Noto Sans KR', sans-serif;
+    line-height: 1.6;
+    color: var(--text-primary);
+    background-color: var(--bg-light);
+    padding: 20px;
+}
+
+/* 컨테이너 */
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* 헤더 */
+header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+header h1 {
+    font-size: 2rem;
+    margin: 0;
+    flex: 1;
+}
+
+header .subtitle {
+    font-size: 1rem;
+    opacity: 0.9;
+    margin-top: 5px;
+}
+
+header .btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    color: white;
+}
+
+header .btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* 카드 */
+.card {
+    background: var(--bg-white);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.card h2 {
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    font-size: 1.5rem;
+}
+
+.card h3 {
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    font-size: 1.2rem;
+}
+
+.card p {
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+}
+
+/* 버튼 */
+.btn {
+    display: inline-block;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-secondary {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: var(--secondary-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-large {
+    width: 100%;
+    padding: 16px;
+    font-size: 1.1rem;
+}
+
+.btn-small {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* 입력 그룹 */
+.input-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.input-group input {
+    flex: 1;
+}
+
+/* 폼 그룹 */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+
+.form-group input[type="text"],
+.form-group input[type="datetime-local"],
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.hint {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    margin-top: 4px;
+}
+
+/* 메뉴 미리보기 */
+.menu-preview {
+    margin-top: 12px;
+    padding: 16px;
+    background: var(--bg-light);
+    border-radius: var(--radius-md);
+    min-height: 100px;
+}
+
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.menu-item-preview {
+    background: white;
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.menu-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.menu-price {
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+/* 세션 그리드 */
+.session-grid {
+    display: grid;
+    gap: 16px;
+}
+
+.session-card {
+    background: var(--bg-light);
+    padding: 16px;
+    border-radius: var(--radius-md);
+    border-left: 4px solid var(--primary-color);
+}
+
+.session-card.expired {
+    border-left-color: var(--text-light);
+    opacity: 0.7;
+}
+
+.session-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.session-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.status-badge.active {
+    background: #e8f5e9;
+    color: var(--primary-color);
+}
+
+.status-badge.expired {
+    background: #f5f5f5;
+    color: var(--text-light);
+}
+
+.restaurant,
+.deadline,
+.order-count {
+    margin: 4px 0;
+    color: var(--text-secondary);
+}
+
+.session-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+/* 정보 박스 */
+.info-box {
+    background: #e3f2fd;
+    border-left: 4px solid var(--secondary-color);
+    padding: 16px;
+    border-radius: var(--radius-md);
+    margin-top: 20px;
+}
+
+.info-box h3 {
+    color: var(--secondary-color);
+    margin-bottom: 12px;
+}
+
+.info-box ol {
+    margin-left: 20px;
+}
+
+.info-box li {
+    margin-bottom: 8px;
+}
+
+/* 에러 박스 */
+.error-box {
+    background: #ffebee;
+    border-left: 4px solid var(--danger-color);
+    padding: 24px;
+    border-radius: var(--radius-md);
+    text-align: center;
+}
+
+.error-box h2 {
+    color: var(--danger-color);
+    margin-bottom: 12px;
+}
+
+/* 로딩 */
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-secondary);
+}
+
+/* 빈 상태 */
+.empty {
+    text-align: center;
+    color: var(--text-light);
+    padding: 20px;
+    font-style: italic;
+}
+
+/* 메뉴 리스트 (주문 페이지) */
+.menu-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.menu-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: var(--bg-light);
+    border-radius: var(--radius-md);
+    transition: background 0.2s ease;
+}
+
+.menu-item:hover {
+    background: #e8f5e9;
+}
+
+.menu-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.quantity-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.qty-btn {
+    width: 32px;
+    height: 32px;
+    border: 2px solid var(--primary-color);
+    background: white;
+    color: var(--primary-color);
+    border-radius: 50%;
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.qty-btn:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.qty-input {
+    width: 60px;
+    text-align: center;
+    padding: 8px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+/* 주문 요약 */
+.order-summary {
+    margin-bottom: 16px;
+}
+
+.summary-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.total-price {
+    display: flex;
+    justify-content: space-between;
+    padding: 16px;
+    background: var(--bg-light);
+    border-radius: var(--radius-md);
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+/* 세션 정보 카드 */
+.session-info-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.session-info-card h2,
+.session-info-card p {
+    color: white;
+}
+
+.session-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin: 20px 0;
+}
+
+.stat-item {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 16px;
+    border-radius: var(--radius-md);
+    text-align: center;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.dashboard-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.dashboard-actions .btn {
+    flex: 1;
+}
+
+/* 메뉴 요약 */
+.menu-summary {
+    margin-top: 12px;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+}
+
+.summary-card {
+    background: var(--bg-light);
+    padding: 16px;
+    border-radius: var(--radius-md);
+    text-align: center;
+}
+
+.summary-name {
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.summary-quantity {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 8px 0;
+}
+
+.summary-price {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* 주문 목록 */
+.order-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.order-card {
+    background: var(--bg-light);
+    padding: 16px;
+    border-radius: var(--radius-md);
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.order-header h4 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.order-time {
+    font-size: 0.85rem;
+    color: var(--text-light);
+}
+
+.order-items {
+    margin-bottom: 12px;
+}
+
+.order-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    color: var(--text-secondary);
+}
+
+.order-note {
+    background: white;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    margin: 8px 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.order-total {
+    text-align: right;
+    font-weight: 700;
+    color: var(--primary-color);
+    padding-top: 8px;
+    border-top: 1px solid var(--border-color);
+}
+
+/* 주문 텍스트 */
+.order-text {
+    width: 100%;
+    min-height: 300px;
+    padding: 16px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-light);
+    resize: vertical;
+}
+
+/* 푸터 */
+footer {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+
+    header {
+        padding: 16px;
+    }
+
+    header h1 {
+        font-size: 1.5rem;
+    }
+
+    .card {
+        padding: 16px;
+    }
+
+    .btn {
+        padding: 10px 20px;
+    }
+
+    .input-group {
+        flex-direction: column;
+    }
+
+    .menu-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .session-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-actions {
+        flex-direction: column;
+    }
+
+    .session-actions {
+        flex-direction: column;
+    }
+
+    .menu-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .quantity-control {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 480px) {
+    header h1 {
+        font-size: 1.3rem;
+    }
+
+    .card h2 {
+        font-size: 1.2rem;
+    }
+
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 프린트 스타일 */
+@media print {
+    body {
+        background: white;
+        padding: 0;
+    }
+
+    .btn,
+    .dashboard-actions,
+    .session-actions,
+    header button {
+        display: none;
+    }
+
+    .card {
+        box-shadow: none;
+        border: 1px solid var(--border-color);
+        page-break-inside: avoid;
+    }
+}
+

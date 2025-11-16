@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주문하기 - 메뉴담기</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🍽️ 주문하기</h1>
+            <button class="btn btn-small" onclick="location.href='index.html'">홈으로</button>
+        </header>
+
+        <main id="orderMain">
+            <!-- 로딩 중 -->
+            <div id="loading" class="loading">
+                <p>주문 정보를 불러오는 중...</p>
+            </div>
+
+            <!-- 세션 정보 없음 -->
+            <div id="notFound" class="error-box" style="display: none;">
+                <h2>❌ 주문을 찾을 수 없습니다</h2>
+                <p>올바른 주문 링크로 접속했는지 확인해주세요.</p>
+                <button class="btn btn-primary" onclick="location.href='index.html'">홈으로 돌아가기</button>
+            </div>
+
+            <!-- 주문 마감됨 -->
+            <div id="expired" class="error-box" style="display: none;">
+                <h2>⏰ 주문이 마감되었습니다</h2>
+                <p>이미 마감 시간이 지났습니다.</p>
+                <button class="btn btn-primary" onclick="location.href='index.html'">홈으로 돌아가기</button>
+            </div>
+
+            <!-- 주문 폼 -->
+            <div id="orderForm" style="display: none;">
+                <div class="session-info card">
+                    <h2 id="sessionTitle"></h2>
+                    <p class="restaurant" id="restaurantName"></p>
+                    <p class="deadline" id="deadlineInfo"></p>
+                </div>
+
+                <div class="card">
+                    <h3>주문자 정보</h3>
+                    <div class="form-group">
+                        <label>이름 *</label>
+                        <input type="text" id="userName" placeholder="이름을 입력하세요">
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>메뉴 선택</h3>
+                    <p class="hint">원하는 메뉴를 선택하고 수량을 입력하세요</p>
+                    <div id="menuList" class="menu-list"></div>
+                </div>
+
+                <div class="card">
+                    <h3>주문 요약</h3>
+                    <div id="orderSummary" class="order-summary">
+                        <p class="empty">아직 선택한 메뉴가 없습니다</p>
+                    </div>
+                    <div class="total-price">
+                        <span>총 금액</span>
+                        <span id="totalPrice">0원</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>요청사항 (선택)</label>
+                    <textarea id="orderNote" rows="3" placeholder="예: 양념 빼주세요, 포크 1개 추가해주세요"></textarea>
+                </div>
+
+                <button class="btn btn-primary btn-large" onclick="submitOrder()">
+                    주문 완료하기
+                </button>
+
+                <div class="info-box">
+                    <p><strong>현재 주문 현황: <span id="currentOrderCount">0</span>명</strong></p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        let currentSession = null;
+        let selectedItems = {}; // { menuId: quantity }
+
+        // 페이지 로드시 세션 정보 가져오기
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionId = urlParams.get('session');
+
+            if (!sessionId) {
+                showNotFound();
+                return;
+            }
+
+            const session = getSession(sessionId);
+            if (!session) {
+                showNotFound();
+                return;
+            }
+
+            // 마감 여부 확인
+            const deadline = new Date(session.deadline);
+            if (deadline < new Date()) {
+                showExpired();
+                return;
+            }
+
+            currentSession = session;
+            displayOrderForm();
+        });
+
+        function showNotFound() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('notFound').style.display = 'block';
+        }
+
+        function showExpired() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('expired').style.display = 'block';
+        }
+
+        function displayOrderForm() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('orderForm').style.display = 'block';
+
+            // 세션 정보 표시
+            document.getElementById('sessionTitle').textContent = currentSession.name;
+            document.getElementById('restaurantName').textContent = '🍽️ ' + currentSession.restaurant;
+            
+            const deadline = new Date(currentSession.deadline);
+            document.getElementById('deadlineInfo').textContent = 
+                '⏰ 마감: ' + deadline.toLocaleString('ko-KR');
+
+            // 메뉴 목록 표시
+            displayMenuList();
+
+            // 현재 주문 수 표시
+            document.getElementById('currentOrderCount').textContent = currentSession.orders.length;
+        }
+
+        function displayMenuList() {
+            const menuList = document.getElementById('menuList');
+            let html = '';
+
+            currentSession.menu.forEach(item => {
+                html += `
+                    <div class="menu-item">
+                        <div class="menu-info">
+                            <span class="menu-name">${item.name}</span>
+                            <span class="menu-price">${item.price.toLocaleString()}원</span>
+                        </div>
+                        <div class="quantity-control">
+                            <button class="qty-btn" onclick="changeQuantity('${item.id}', -1)">-</button>
+                            <input type="number" 
+                                   id="qty-${item.id}" 
+                                   value="0" 
+                                   min="0" 
+                                   class="qty-input"
+                                   onchange="updateQuantity('${item.id}', this.value)">
+                            <button class="qty-btn" onclick="changeQuantity('${item.id}', 1)">+</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            menuList.innerHTML = html;
+        }
+
+        function changeQuantity(menuId, delta) {
+            const input = document.getElementById(`qty-${menuId}`);
+            const newValue = Math.max(0, parseInt(input.value || 0) + delta);
+            input.value = newValue;
+            updateQuantity(menuId, newValue);
+        }
+
+        function updateQuantity(menuId, quantity) {
+            quantity = parseInt(quantity) || 0;
+            if (quantity > 0) {
+                selectedItems[menuId] = quantity;
+            } else {
+                delete selectedItems[menuId];
+            }
+            updateOrderSummary();
+        }
+
+        function updateOrderSummary() {
+            const summaryDiv = document.getElementById('orderSummary');
+            const totalPriceSpan = document.getElementById('totalPrice');
+
+            if (Object.keys(selectedItems).length === 0) {
+                summaryDiv.innerHTML = '<p class="empty">아직 선택한 메뉴가 없습니다</p>';
+                totalPriceSpan.textContent = '0원';
+                return;
+            }
+
+            let html = '<div class="summary-items">';
+            let total = 0;
+
+            for (let menuId in selectedItems) {
+                const quantity = selectedItems[menuId];
+                const menuItem = currentSession.menu.find(m => m.id == menuId);
+                if (menuItem) {
+                    const itemTotal = menuItem.price * quantity;
+                    total += itemTotal;
+                    html += `
+                        <div class="summary-item">
+                            <span>${menuItem.name} x ${quantity}</span>
+                            <span>${itemTotal.toLocaleString()}원</span>
+                        </div>
+                    `;
+                }
+            }
+
+            html += '</div>';
+            summaryDiv.innerHTML = html;
+            totalPriceSpan.textContent = total.toLocaleString() + '원';
+        }
+
+        function submitOrder() {
+            const userName = document.getElementById('userName').value.trim();
+            const orderNote = document.getElementById('orderNote').value.trim();
+
+            if (!userName) {
+                alert('이름을 입력해주세요!');
+                return;
+            }
+
+            if (Object.keys(selectedItems).length === 0) {
+                alert('최소 1개 이상의 메뉴를 선택해주세요!');
+                return;
+            }
+
+            // 주문 데이터 생성
+            const orderItems = [];
+            let totalPrice = 0;
+
+            for (let menuId in selectedItems) {
+                const quantity = selectedItems[menuId];
+                const menuItem = currentSession.menu.find(m => m.id == menuId);
+                if (menuItem) {
+                    orderItems.push({
+                        menuId: menuId,
+                        menuName: menuItem.name,
+                        price: menuItem.price,
+                        quantity: quantity
+                    });
+                    totalPrice += menuItem.price * quantity;
+                }
+            }
+
+            const order = {
+                id: Date.now() + Math.random(),
+                userName: userName,
+                items: orderItems,
+                totalPrice: totalPrice,
+                note: orderNote,
+                timestamp: new Date().toISOString()
+            };
+
+            // 세션에 주문 추가
+            addOrderToSession(currentSession.id, order);
+
+            // 완료 알림
+            alert(`주문이 완료되었습니다!\n\n주문자: ${userName}\n총 금액: ${totalPrice.toLocaleString()}원`);
+            
+            // 폼 초기화
+            document.getElementById('userName').value = '';
+            document.getElementById('orderNote').value = '';
+            selectedItems = {};
+            document.querySelectorAll('.qty-input').forEach(input => input.value = 0);
+            updateOrderSummary();
+
+            // 주문 수 업데이트
+            const updatedSession = getSession(currentSession.id);
+            document.getElementById('currentOrderCount').textContent = updatedSession.orders.length;
+        }
+    </script>
+</body>
+</html>
+

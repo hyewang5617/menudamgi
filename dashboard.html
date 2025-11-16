@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주문 현황 - 메뉴담기</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 주문 현황 대시보드</h1>
+            <button class="btn btn-small" onclick="location.href='admin.html'">관리자 페이지</button>
+        </header>
+
+        <main id="dashboardMain">
+            <div id="loading" class="loading">
+                <p>주문 현황을 불러오는 중...</p>
+            </div>
+
+            <div id="dashboard" style="display: none;">
+                <!-- 세션 정보 -->
+                <div class="card session-info-card">
+                    <h2 id="sessionTitle"></h2>
+                    <p class="restaurant" id="restaurantName"></p>
+                    <p class="deadline" id="deadlineInfo"></p>
+                    <div class="session-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">총 주문자</span>
+                            <span class="stat-value" id="totalOrders">0명</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">총 금액</span>
+                            <span class="stat-value" id="totalAmount">0원</span>
+                        </div>
+                    </div>
+                    <div class="dashboard-actions">
+                        <button class="btn btn-secondary" onclick="copyLink()">
+                            📤 주문 링크 복사
+                        </button>
+                        <button class="btn btn-primary" onclick="copyOrderSummary()">
+                            📋 주문 내역 복사
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 메뉴별 집계 -->
+                <div class="card">
+                    <h3>📊 메뉴별 주문 집계</h3>
+                    <div id="menuSummary" class="menu-summary"></div>
+                </div>
+
+                <!-- 개별 주문 목록 -->
+                <div class="card">
+                    <h3>👥 개별 주문 내역</h3>
+                    <div id="orderList" class="order-list"></div>
+                </div>
+
+                <!-- 배민용 주문 텍스트 -->
+                <div class="card">
+                    <h3>📝 배민 주문용 텍스트</h3>
+                    <p class="hint">아래 텍스트를 복사해서 배민 "함께주문" 채팅에 붙여넣으세요</p>
+                    <textarea id="orderText" class="order-text" readonly></textarea>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        let currentSession = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionId = urlParams.get('session');
+
+            if (!sessionId) {
+                alert('세션 ID가 없습니다.');
+                location.href = 'admin.html';
+                return;
+            }
+
+            currentSession = getSession(sessionId);
+            if (!currentSession) {
+                alert('세션을 찾을 수 없습니다.');
+                location.href = 'admin.html';
+                return;
+            }
+
+            displayDashboard();
+        });
+
+        function displayDashboard() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+
+            // 세션 정보
+            document.getElementById('sessionTitle').textContent = currentSession.name;
+            document.getElementById('restaurantName').textContent = '🍽️ ' + currentSession.restaurant;
+            
+            const deadline = new Date(currentSession.deadline);
+            const isExpired = deadline < new Date();
+            const deadlineText = isExpired ? '⏰ 마감됨: ' : '⏰ 마감: ';
+            document.getElementById('deadlineInfo').textContent = deadlineText + deadline.toLocaleString('ko-KR');
+
+            // 통계
+            const totalOrders = currentSession.orders.length;
+            const totalAmount = currentSession.orders.reduce((sum, order) => sum + order.totalPrice, 0);
+            
+            document.getElementById('totalOrders').textContent = totalOrders + '명';
+            document.getElementById('totalAmount').textContent = totalAmount.toLocaleString() + '원';
+
+            // 메뉴별 집계
+            displayMenuSummary();
+
+            // 개별 주문 목록
+            displayOrderList();
+
+            // 배민용 텍스트
+            generateOrderText();
+        }
+
+        function displayMenuSummary() {
+            const menuSummaryDiv = document.getElementById('menuSummary');
+            
+            if (currentSession.orders.length === 0) {
+                menuSummaryDiv.innerHTML = '<p class="empty">아직 주문이 없습니다</p>';
+                return;
+            }
+
+            // 메뉴별로 수량 집계
+            const menuCount = {};
+            currentSession.orders.forEach(order => {
+                order.items.forEach(item => {
+                    if (!menuCount[item.menuName]) {
+                        menuCount[item.menuName] = {
+                            name: item.menuName,
+                            quantity: 0,
+                            price: item.price
+                        };
+                    }
+                    menuCount[item.menuName].quantity += item.quantity;
+                });
+            });
+
+            // 정렬 (수량 많은 순)
+            const sortedMenu = Object.values(menuCount).sort((a, b) => b.quantity - a.quantity);
+
+            let html = '<div class="summary-grid">';
+            sortedMenu.forEach(item => {
+                const total = item.price * item.quantity;
+                html += `
+                    <div class="summary-card">
+                        <div class="summary-name">${item.name}</div>
+                        <div class="summary-quantity">${item.quantity}개</div>
+                        <div class="summary-price">${total.toLocaleString()}원</div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+
+            menuSummaryDiv.innerHTML = html;
+        }
+
+        function displayOrderList() {
+            const orderListDiv = document.getElementById('orderList');
+
+            if (currentSession.orders.length === 0) {
+                orderListDiv.innerHTML = '<p class="empty">아직 주문이 없습니다</p>';
+                return;
+            }
+
+            let html = '';
+            currentSession.orders.forEach((order, index) => {
+                const timestamp = new Date(order.timestamp).toLocaleString('ko-KR');
+                html += `
+                    <div class="order-card">
+                        <div class="order-header">
+                            <h4>${order.userName}</h4>
+                            <span class="order-time">${timestamp}</span>
+                        </div>
+                        <div class="order-items">
+                            ${order.items.map(item => `
+                                <div class="order-item">
+                                    <span>${item.menuName} x ${item.quantity}</span>
+                                    <span>${(item.price * item.quantity).toLocaleString()}원</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        ${order.note ? `<div class="order-note">💬 ${order.note}</div>` : ''}
+                        <div class="order-total">
+                            합계: ${order.totalPrice.toLocaleString()}원
+                        </div>
+                    </div>
+                `;
+            });
+
+            orderListDiv.innerHTML = html;
+        }
+
+        function generateOrderText() {
+            const textarea = document.getElementById('orderText');
+            
+            if (currentSession.orders.length === 0) {
+                textarea.value = '아직 주문이 없습니다.';
+                return;
+            }
+
+            let text = `[${currentSession.name}]\n`;
+            text += `${currentSession.restaurant}\n`;
+            text += `마감: ${new Date(currentSession.deadline).toLocaleString('ko-KR')}\n\n`;
+            text += `=== 메뉴별 주문 ===\n`;
+
+            // 메뉴별 집계
+            const menuCount = {};
+            currentSession.orders.forEach(order => {
+                order.items.forEach(item => {
+                    if (!menuCount[item.menuName]) {
+                        menuCount[item.menuName] = 0;
+                    }
+                    menuCount[item.menuName] += item.quantity;
+                });
+            });
+
+            Object.keys(menuCount).sort().forEach(menuName => {
+                text += `${menuName}: ${menuCount[menuName]}개\n`;
+            });
+
+            text += `\n=== 개별 주문 ===\n`;
+            currentSession.orders.forEach(order => {
+                text += `\n${order.userName}:\n`;
+                order.items.forEach(item => {
+                    text += `  - ${item.menuName} x ${item.quantity}\n`;
+                });
+                if (order.note) {
+                    text += `  요청: ${order.note}\n`;
+                }
+                text += `  (${order.totalPrice.toLocaleString()}원)\n`;
+            });
+
+            const totalAmount = currentSession.orders.reduce((sum, order) => sum + order.totalPrice, 0);
+            text += `\n총 인원: ${currentSession.orders.length}명\n`;
+            text += `총 금액: ${totalAmount.toLocaleString()}원`;
+
+            textarea.value = text;
+        }
+
+        function copyLink() {
+            const link = `${window.location.origin}/order.html?session=${currentSession.id}`;
+            navigator.clipboard.writeText(link).then(() => {
+                alert('주문 링크가 복사되었습니다!\n카톡으로 팀원들에게 공유하세요 📤');
+            });
+        }
+
+        function copyOrderSummary() {
+            const textarea = document.getElementById('orderText');
+            textarea.select();
+            navigator.clipboard.writeText(textarea.value).then(() => {
+                alert('주문 내역이 복사되었습니다!\n배민 채팅에 붙여넣으세요 📋');
+            });
+        }
+
+        // 자동 새로고침 (30초마다)
+        setInterval(() => {
+            const updatedSession = getSession(currentSession.id);
+            if (updatedSession) {
+                currentSession = updatedSession;
+                displayDashboard();
+            }
+        }, 30000);
+    </script>
+</body>
+</html>
+

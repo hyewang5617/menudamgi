@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>메뉴담기 - 단체 주문 관리</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🍽️ 메뉴담기</h1>
+            <p class="subtitle">단체 주문을 쉽게 관리하세요</p>
+        </header>
+
+        <main>
+            <div class="card">
+                <h2>관리자 (총무)</h2>
+                <p>새로운 주문 세션을 만들거나 기존 세션을 관리하세요</p>
+                <button class="btn btn-primary" onclick="location.href='admin.html'">
+                    관리자 페이지로 가기
+                </button>
+            </div>
+
+            <div class="card">
+                <h2>팀원</h2>
+                <p>공유받은 주문 링크로 접속해서 주문하세요</p>
+                <div class="input-group">
+                    <input type="text" id="sessionCode" placeholder="주문 코드 입력 (예: ABC123)">
+                    <button class="btn btn-secondary" onclick="joinOrder()">
+                        주문하러 가기
+                    </button>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <h3>💡 사용 방법</h3>
+                <ol>
+                    <li><strong>총무:</strong> 관리자 페이지에서 식당과 메뉴를 입력하고 주문 세션을 생성</li>
+                    <li><strong>총무:</strong> 생성된 링크를 카톡으로 팀원들에게 공유</li>
+                    <li><strong>팀원:</strong> 링크를 클릭해서 원하는 메뉴 선택</li>
+                    <li><strong>총무:</strong> 마감 시간에 주문 내역을 확인하고 배민에 주문</li>
+                </ol>
+            </div>
+        </main>
+
+        <footer>
+            <p>단체 주문의 스트레스를 줄이는 메뉴담기 💚</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        function joinOrder() {
+            const code = document.getElementById('sessionCode').value.trim().toUpperCase();
+            if (!code) {
+                alert('주문 코드를 입력해주세요!');
+                return;
+            }
+            location.href = `order.html?session=${code}`;
+        }
+    </script>
+</body>
+</html>
+

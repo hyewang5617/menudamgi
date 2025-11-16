@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 페이지 - 메뉴담기</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔧 관리자 페이지</h1>
+            <button class="btn btn-small" onclick="location.href='index.html'">홈으로</button>
+        </header>
+
+        <main>
+            <!-- 새 주문 세션 만들기 -->
+            <div class="card">
+                <h2>새 주문 세션 만들기</h2>
+                
+                <div class="form-group">
+                    <label>주문 이름 *</label>
+                    <input type="text" id="sessionName" placeholder="예: 오늘 저녁, 금요일 디저트">
+                </div>
+
+                <div class="form-group">
+                    <label>식당 이름 *</label>
+                    <input type="text" id="restaurantName" placeholder="예: 맘스터치, 교촌치킨">
+                </div>
+
+                <div class="form-group">
+                    <label>마감 시간 *</label>
+                    <input type="datetime-local" id="deadline">
+                </div>
+
+                <div class="form-group">
+                    <label>메뉴 입력 *</label>
+                    <p class="hint">한 줄에 하나씩, "메뉴명|가격" 형식으로 입력하세요</p>
+                    <textarea id="menuInput" rows="10" placeholder="예:
+싸이버거|5900
+통새우버거|6500
+딥치즈버거|5500
+케이준감자|2000
+치즈스틱|2500"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>메뉴 미리보기</label>
+                    <div id="menuPreview" class="menu-preview"></div>
+                </div>
+
+                <button class="btn btn-primary btn-large" onclick="createSession()">
+                    주문 세션 생성하기
+                </button>
+            </div>
+
+            <!-- 기존 세션 목록 -->
+            <div class="card">
+                <h2>내 주문 세션 목록</h2>
+                <div id="sessionList"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // 메뉴 입력 실시간 미리보기
+        document.getElementById('menuInput').addEventListener('input', function() {
+            const menuText = this.value;
+            const preview = document.getElementById('menuPreview');
+            const lines = menuText.split('\n').filter(line => line.trim());
+            
+            if (lines.length === 0) {
+                preview.innerHTML = '<p class="empty">메뉴가 없습니다</p>';
+                return;
+            }
+
+            let html = '<div class="menu-grid">';
+            lines.forEach(line => {
+                const parts = line.split('|');
+                if (parts.length === 2) {
+                    const name = parts[0].trim();
+                    const price = parts[1].trim();
+                    html += `
+                        <div class="menu-item-preview">
+                            <span class="menu-name">${name}</span>
+                            <span class="menu-price">${parseInt(price).toLocaleString()}원</span>
+                        </div>
+                    `;
+                }
+            });
+            html += '</div>';
+            preview.innerHTML = html;
+        });
+
+        // 세션 생성
+        function createSession() {
+            const sessionName = document.getElementById('sessionName').value.trim();
+            const restaurantName = document.getElementById('restaurantName').value.trim();
+            const deadline = document.getElementById('deadline').value;
+            const menuText = document.getElementById('menuInput').value.trim();
+
+            if (!sessionName || !restaurantName || !deadline || !menuText) {
+                alert('모든 필수 항목을 입력해주세요!');
+                return;
+            }
+
+            // 메뉴 파싱
+            const menuLines = menuText.split('\n').filter(line => line.trim());
+            const menu = [];
+            
+            for (let line of menuLines) {
+                const parts = line.split('|');
+                if (parts.length === 2) {
+                    menu.push({
+                        id: Date.now() + Math.random(),
+                        name: parts[0].trim(),
+                        price: parseInt(parts[1].trim())
+                    });
+                }
+            }
+
+            if (menu.length === 0) {
+                alert('올바른 형식의 메뉴를 최소 1개 이상 입력해주세요!');
+                return;
+            }
+
+            // 세션 생성
+            const session = {
+                id: generateSessionCode(),
+                name: sessionName,
+                restaurant: restaurantName,
+                deadline: deadline,
+                menu: menu,
+                orders: [],
+                createdAt: new Date().toISOString()
+            };
+
+            // 저장
+            saveSession(session);
+
+            // 대시보드로 이동
+            location.href = `dashboard.html?session=${session.id}`;
+        }
+
+        // 세션 목록 로드
+        function loadSessions() {
+            const sessions = getAllSessions();
+            const listDiv = document.getElementById('sessionList');
+
+            if (sessions.length === 0) {
+                listDiv.innerHTML = '<p class="empty">아직 생성된 주문 세션이 없습니다.</p>';
+                return;
+            }
+
+            let html = '<div class="session-grid">';
+            sessions.forEach(session => {
+                const deadline = new Date(session.deadline);
+                const isExpired = deadline < new Date();
+                const statusClass = isExpired ? 'expired' : 'active';
+                const statusText = isExpired ? '마감됨' : '진행중';
+
+                html += `
+                    <div class="session-card ${statusClass}">
+                        <div class="session-header">
+                            <h3>${session.name}</h3>
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                        </div>
+                        <p class="restaurant">🍽️ ${session.restaurant}</p>
+                        <p class="deadline">⏰ ${deadline.toLocaleString('ko-KR')}</p>
+                        <p class="order-count">📋 ${session.orders.length}명 주문</p>
+                        <div class="session-actions">
+                            <button class="btn btn-small btn-secondary" onclick="copyLink('${session.id}')">
+                                링크 복사
+                            </button>
+                            <button class="btn btn-small btn-primary" onclick="location.href='dashboard.html?session=${session.id}'">
+                                대시보드
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            listDiv.innerHTML = html;
+        }
+
+        function copyLink(sessionId) {
+            const link = `${window.location.origin}/order.html?session=${sessionId}`;
+            navigator.clipboard.writeText(link).then(() => {
+                alert('링크가 복사되었습니다!\n카톡으로 팀원들에게 공유하세요 📤');
+            });
+        }
+
+        // 페이지 로드시 세션 목록 로드
+        loadSessions();
+
+        // 기본 마감시간 설정 (오늘 오후 5시)
+        window.addEventListener('DOMContentLoaded', () => {
+            const now = new Date();
+            now.setHours(17, 0, 0, 0);
+            document.getElementById('deadline').value = now.toISOString().slice(0, 16);
+        });
+    </script>
+</body>
+</html>
+
