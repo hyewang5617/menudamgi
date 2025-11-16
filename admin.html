@@ -103,13 +103,28 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
-    <script>
+    <script type="module">
+        import {
+            generateSessionCode,
+            getAllSessions,
+            getSession,
+            saveSession,
+            deleteSession,
+            updateSession,
+            formatDate,
+            formatPrice,
+            isSessionExpired,
+            getTimeRemaining,
+            getAllTemplates,
+            saveTemplate,
+            deleteTemplate
+        } from './firebase.js';
+
         // ===== 데이터 백업/복원 기능 =====
         
-        function exportData() {
-            const sessions = getAllSessions();
-            const templates = getTemplates();
+        async function exportData() {
+            const sessions = await getAllSessions();
+            const templates = getAllTemplates();
             
             const backupData = {
                 version: '1.0',
@@ -137,7 +152,7 @@
             alert(`데이터 백업 완료! 🎉\n\n세션: ${sessions.length}개\n템플릿: ${templates.length}개\n\n파일이 다운로드되었습니다.`);
         }
         
-        function importData(event) {
+        async function importData(event) {
             const file = event.target.files[0];
             if (!file) return;
             
@@ -147,7 +162,7 @@
             }
             
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 try {
                     const backupData = JSON.parse(e.target.result);
                     
@@ -157,8 +172,8 @@
                     }
                     
                     // 복원 확인
-                    const currentSessions = getAllSessions();
-                    const currentTemplates = getTemplates();
+                    const currentSessions = await getAllSessions();
+                    const currentTemplates = getAllTemplates();
                     
                     let message = `데이터를 복원하시겠습니까?\n\n`;
                     message += `백업 파일:\n`;
@@ -179,23 +194,23 @@
                     let importedSessions = 0;
                     let skippedSessions = 0;
                     
-                    backupData.sessions.forEach(session => {
-                        const exists = getSession(session.id);
+                    for (const session of backupData.sessions) {
+                        const exists = await getSession(session.id);
                         if (!exists) {
-                            saveSession(session);
+                            await saveSession(session);
                             importedSessions++;
                         } else {
                             skippedSessions++;
                         }
-                    });
+                    }
                     
                     // 템플릿 복원 (중복 ID 체크)
                     let importedTemplates = 0;
                     let skippedTemplates = 0;
                     
                     if (backupData.templates && Array.isArray(backupData.templates)) {
-                        backupData.templates.forEach(template => {
-                            const templates = getTemplates();
+                        for (const template of backupData.templates) {
+                            const templates = getAllTemplates();
                             const exists = templates.find(t => t.id === template.id);
                             if (!exists) {
                                 saveTemplate(template);
@@ -203,11 +218,11 @@
                             } else {
                                 skippedTemplates++;
                             }
-                        });
+                        }
                     }
                     
                     // 페이지 새로고침
-                    loadSessions();
+                    await loadSessions();
                     
                     let resultMessage = `데이터 복원 완료! 🎉\n\n`;
                     resultMessage += `세션: ${importedSessions}개 추가`;
@@ -281,8 +296,8 @@
         }
 
         // 이전 메뉴 재사용
-        function showPreviousMenus() {
-            const sessions = getAllSessions();
+        async function showPreviousMenus() {
+            const sessions = await getAllSessions();
             if (sessions.length === 0) {
                 alert('이전 주문 세션이 없습니다.');
                 return;
@@ -297,7 +312,7 @@
                     minute: '2-digit'
                 });
                 html += `
-                    <div class="menu-select-item" onclick="loadMenuFromSession('${session.id}')">
+                    <div class="menu-select-item" onclick="window.loadMenuFromSession('${session.id}')">
                         <div>
                             <strong>${session.restaurant}</strong>
                             <p style="font-size: 0.9rem; color: #666;">${session.name} - ${date}</p>
@@ -315,8 +330,8 @@
             document.getElementById('menuModal').style.display = 'flex';
         }
 
-        function loadMenuFromSession(sessionId) {
-            const session = getSession(sessionId);
+        async function loadMenuFromSession(sessionId) {
+            const session = await getSession(sessionId);
             if (!session) return;
 
             const menuText = session.menu.map(m => `${m.name}|${m.price}`).join('\n');
@@ -326,6 +341,10 @@
             closeMenuModal();
             alert(`"${session.restaurant}" 메뉴를 불러왔습니다!\n필요하면 수정하고 사용하세요.`);
         }
+        
+        // window에 등록
+        window.showPreviousMenus = showPreviousMenus;
+        window.loadMenuFromSession = loadMenuFromSession;
 
         // 템플릿 관리
         const TEMPLATE_KEY = 'menudamgi_templates';
@@ -492,7 +511,7 @@
         });
 
         // 세션 생성
-        function createSession() {
+        async function createSession() {
             const sessionName = document.getElementById('sessionName').value.trim();
             const restaurantName = document.getElementById('restaurantName').value.trim();
             const deadline = document.getElementById('deadline').value;
@@ -535,15 +554,15 @@
             };
 
             // 저장
-            saveSession(session);
+            await saveSession(session);
 
             // 대시보드로 이동
             location.href = `dashboard.html?session=${session.id}`;
         }
 
         // 세션 목록 로드
-        function loadSessions() {
-            const sessions = getAllSessions();
+        async function loadSessions() {
+            const sessions = await getAllSessions();
             const listDiv = document.getElementById('sessionList');
 
             if (sessions.length === 0) {
@@ -581,6 +600,9 @@
             html += '</div>';
             listDiv.innerHTML = html;
         }
+        
+        // copyLink를 window에 등록
+        window.copyLink = copyLink;
 
         function copyLink(sessionId) {
             let link;
@@ -603,6 +625,17 @@
                 }
             });
         }
+
+        // 모든 함수를 window에 등록 (HTML onclick에서 사용하기 위함)
+        window.createSession = createSession;
+        window.saveAsTemplate = saveAsTemplate;
+        window.showTemplateModal = showTemplateModal;
+        window.loadTemplate = loadTemplate;
+        window.removeTemplate = removeTemplate;
+        window.closeMenuModal = closeMenuModal;
+        window.smartParse = smartParse;
+        window.exportData = exportData;
+        window.importData = importData;
 
         // 페이지 로드시 세션 목록 로드
         loadSessions();

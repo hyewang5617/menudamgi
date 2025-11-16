@@ -69,11 +69,12 @@
         </main>
     </div>
 
-    <script src="app.js"></script>
-    <script>
+    <script type="module">
+        import { getSession } from './firebase.js';
+        
         let currentSession = null;
 
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
             const sessionId = urlParams.get('session');
 
@@ -83,7 +84,7 @@
                 return;
             }
 
-            currentSession = getSession(sessionId);
+            currentSession = await getSession(sessionId);
             if (!currentSession) {
                 alert('세션을 찾을 수 없습니다.');
                 location.href = 'admin.html';
