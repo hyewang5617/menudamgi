@@ -444,6 +444,11 @@
             const updatedSession = await getSession(currentSession.id);
             document.getElementById('currentOrderCount').textContent = updatedSession.orders.length;
         }
+        
+        // 함수를 window에 등록 (HTML onclick에서 사용하기 위함)
+        window.startOrder = startOrder;
+        window.submitOrder = submitOrder;
+        window.changeQuantity = changeQuantity;
     </script>
 </body>
 </html>
