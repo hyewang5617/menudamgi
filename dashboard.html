@@ -287,7 +287,8 @@
                 link = `file://${dirPath}/order.html?session=${currentSession.id}`;
             } else {
                 // http:// 또는 https:// 프로토콜
-                link = `${window.location.origin}${window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'))}/order.html?session=${currentSession.id}`;
+                const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+                link = `${window.location.origin}${basePath}order.html?session=${currentSession.id}`;
             }
             
             navigator.clipboard.writeText(link).then(() => {
