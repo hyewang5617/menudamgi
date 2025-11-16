@@ -197,7 +197,10 @@
             const menuList = document.getElementById('menuList');
             let html = '';
 
-            currentSession.menu.forEach(item => {
+            // 가격 내림차순 정렬 (비싼 것부터)
+            const sortedMenu = [...currentSession.menu].sort((a, b) => b.price - a.price);
+
+            sortedMenu.forEach(item => {
                 html += `
                     <div class="menu-item">
                         <div class="menu-info">

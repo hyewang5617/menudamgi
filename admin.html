@@ -463,19 +463,29 @@
                 return;
             }
 
-            let html = '<div class="menu-grid">';
+            // 메뉴 파싱 및 가격순 정렬
+            const menuItems = [];
             lines.forEach(line => {
                 const parts = line.split('|');
                 if (parts.length === 2) {
-                    const name = parts[0].trim();
-                    const price = parts[1].trim();
-                    html += `
-                        <div class="menu-item-preview">
-                            <span class="menu-name">${name}</span>
-                            <span class="menu-price">${parseInt(price).toLocaleString()}원</span>
-                        </div>
-                    `;
+                    menuItems.push({
+                        name: parts[0].trim(),
+                        price: parseInt(parts[1].trim())
+                    });
                 }
+            });
+
+            // 가격 내림차순 정렬 (비싼 것부터)
+            menuItems.sort((a, b) => b.price - a.price);
+
+            let html = '<div class="menu-grid">';
+            menuItems.forEach(item => {
+                html += `
+                    <div class="menu-item-preview">
+                        <span class="menu-name">${item.name}</span>
+                        <span class="menu-price">${item.price.toLocaleString()}원</span>
+                    </div>
+                `;
             });
             html += '</div>';
             preview.innerHTML = html;
