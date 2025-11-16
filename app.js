@@ -59,6 +59,37 @@ function addOrderToSession(sessionId, order) {
     return true;
 }
 
+// 세션에서 특정 사용자의 기존 주문 찾기
+function findOrderByUserName(sessionId, userName) {
+    const session = getSession(sessionId);
+    if (!session) {
+        return null;
+    }
+    
+    return session.orders.find(order => order.userName === userName);
+}
+
+// 세션의 주문 업데이트 (같은 이름의 기존 주문 수정)
+function updateOrderInSession(sessionId, userName, updatedOrder) {
+    const session = getSession(sessionId);
+    if (!session) {
+        console.error('Session not found:', sessionId);
+        return false;
+    }
+    
+    const orderIndex = session.orders.findIndex(order => order.userName === userName);
+    if (orderIndex >= 0) {
+        // 기존 주문 업데이트
+        session.orders[orderIndex] = updatedOrder;
+    } else {
+        // 새 주문 추가
+        session.orders.push(updatedOrder);
+    }
+    
+    saveSession(session);
+    return true;
+}
+
 // 세션 삭제
 function deleteSession(sessionId) {
     const sessions = getAllSessions();

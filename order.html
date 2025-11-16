@@ -102,6 +102,7 @@
         let currentSession = null;
         let selectedItems = {}; // { menuId: quantity }
         let currentUserName = '';
+        let existingOrder = null; // 기존 주문 (있는 경우)
 
         // 페이지 로드시 세션 정보 가져오기
         window.addEventListener('DOMContentLoaded', () => {
@@ -170,6 +171,25 @@
             }
 
             currentUserName = userName;
+            
+            // 같은 이름의 기존 주문 확인
+            existingOrder = findOrderByUserName(currentSession.id, userName);
+            
+            if (existingOrder) {
+                // 기존 주문이 있으면 알림 표시
+                const confirm = window.confirm(
+                    `'${userName}' 님의 기존 주문이 있습니다!\n\n` +
+                    `기존 주문을 불러와서 수정하시겠습니까?\n\n` +
+                    `[확인] - 기존 주문 수정\n` +
+                    `[취소] - 새로 주문하기`
+                );
+                
+                if (!confirm) {
+                    // 새로 주문하기 선택
+                    existingOrder = null;
+                }
+            }
+            
             document.getElementById('nameStep').style.display = 'none';
             displayOrderForm();
         }
@@ -188,9 +208,35 @@
 
             // 메뉴 목록 표시
             displayMenuList();
+            
+            // 기존 주문이 있으면 불러오기
+            if (existingOrder) {
+                loadExistingOrder();
+            }
 
             // 현재 주문 수 표시
             document.getElementById('currentOrderCount').textContent = currentSession.orders.length;
+        }
+        
+        function loadExistingOrder() {
+            // 기존 주문의 메뉴 항목들을 selectedItems에 채우기
+            existingOrder.items.forEach(item => {
+                selectedItems[item.menuId] = item.quantity;
+                
+                // 수량 입력 필드에 값 설정
+                const input = document.getElementById(`qty-${item.menuId}`);
+                if (input) {
+                    input.value = item.quantity;
+                }
+            });
+            
+            // 요청사항 채우기
+            if (existingOrder.note) {
+                document.getElementById('orderNote').value = existingOrder.note;
+            }
+            
+            // 주문 요약 업데이트
+            updateOrderSummary();
         }
 
         function displayMenuList() {
@@ -301,7 +347,7 @@
             }
 
             const order = {
-                id: Date.now() + Math.random(),
+                id: existingOrder ? existingOrder.id : Date.now() + Math.random(),
                 userName: currentUserName,
                 items: orderItems,
                 totalPrice: totalPrice,
@@ -309,15 +355,17 @@
                 timestamp: new Date().toISOString()
             };
 
-            // 세션에 주문 추가
-            addOrderToSession(currentSession.id, order);
+            // 세션에 주문 추가 또는 업데이트
+            updateOrderInSession(currentSession.id, currentUserName, order);
 
             // 완료 알림
-            alert(`주문이 완료되었습니다!\n\n주문자: ${currentUserName}\n총 금액: ${totalPrice.toLocaleString()}원\n\n창을 닫으셔도 됩니다!`);
+            const actionText = existingOrder ? '수정되었습니다' : '완료되었습니다';
+            alert(`주문이 ${actionText}!\n\n주문자: ${currentUserName}\n총 금액: ${totalPrice.toLocaleString()}원\n\n창을 닫으셔도 됩니다!`);
             
             // 폼 초기화
             document.getElementById('orderNote').value = '';
             selectedItems = {};
+            existingOrder = null;
             document.querySelectorAll('.qty-input').forEach(input => input.value = 0);
             updateOrderSummary();
 
