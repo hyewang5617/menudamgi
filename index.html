@@ -24,12 +24,14 @@
 
             <div class="card">
                 <h2>팀원</h2>
-                <p>공유받은 주문 링크로 접속해서 주문하세요</p>
-                <div class="input-group">
-                    <input type="text" id="sessionCode" placeholder="주문 코드 입력 (예: ABC123)">
-                    <button class="btn btn-secondary" onclick="joinOrder()">
-                        주문하러 가기
-                    </button>
+                <p>총무가 공유한 주문 링크를 클릭하면 바로 주문할 수 있어요!</p>
+                <div class="info-box" style="margin-top: 16px;">
+                    <p><strong>💡 주문 방법:</strong></p>
+                    <ol style="margin-left: 20px; margin-top: 8px;">
+                        <li>카톡으로 받은 주문 링크 클릭</li>
+                        <li>이름 입력하고 메뉴 선택</li>
+                        <li>주문 완료! 끝!</li>
+                    </ol>
                 </div>
             </div>
 
@@ -50,16 +52,6 @@
     </div>
 
     <script src="app.js"></script>
-    <script>
-        function joinOrder() {
-            const code = document.getElementById('sessionCode').value.trim().toUpperCase();
-            if (!code) {
-                alert('주문 코드를 입력해주세요!');
-                return;
-            }
-            location.href = `order.html?session=${code}`;
-        }
-    </script>
 </body>
 </html>
 

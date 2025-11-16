@@ -52,7 +52,10 @@
 
                 <!-- 개별 주문 목록 -->
                 <div class="card">
-                    <h3>👥 개별 주문 내역</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h3 style="margin: 0;">👥 개별 주문 내역 (<span id="orderCount">0</span>명)</h3>
+                        <input type="text" id="searchName" placeholder="🔍 이름 검색..." style="padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 8px; width: 200px;">
+                    </div>
                     <div id="orderList" class="order-list"></div>
                 </div>
 
@@ -162,34 +165,64 @@
             menuSummaryDiv.innerHTML = html;
         }
 
-        function displayOrderList() {
+        function displayOrderList(searchTerm = '') {
             const orderListDiv = document.getElementById('orderList');
+            const orderCountSpan = document.getElementById('orderCount');
 
             if (currentSession.orders.length === 0) {
                 orderListDiv.innerHTML = '<p class="empty">아직 주문이 없습니다</p>';
+                orderCountSpan.textContent = '0';
+                return;
+            }
+
+            // 검색 필터링
+            let filteredOrders = currentSession.orders;
+            if (searchTerm) {
+                filteredOrders = currentSession.orders.filter(order => 
+                    order.userName.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+            }
+
+            orderCountSpan.textContent = currentSession.orders.length;
+
+            if (filteredOrders.length === 0) {
+                orderListDiv.innerHTML = '<p class="empty">검색 결과가 없습니다</p>';
                 return;
             }
 
             let html = '';
-            currentSession.orders.forEach((order, index) => {
-                const timestamp = new Date(order.timestamp).toLocaleString('ko-KR');
+            filteredOrders.forEach((order, index) => {
+                const timestamp = new Date(order.timestamp).toLocaleString('ko-KR', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                // 이름 하이라이트
+                let displayName = order.userName;
+                if (searchTerm) {
+                    const regex = new RegExp(`(${searchTerm})`, 'gi');
+                    displayName = displayName.replace(regex, '<mark style="background: #ffeb3b; padding: 2px 4px; border-radius: 3px;">$1</mark>');
+                }
+
                 html += `
-                    <div class="order-card">
+                    <div class="order-card" data-name="${order.userName.toLowerCase()}">
                         <div class="order-header">
-                            <h4>${order.userName}</h4>
-                            <span class="order-time">${timestamp}</span>
+                            <h4>${displayName}</h4>
+                            <span class="order-time">📅 ${timestamp}</span>
                         </div>
                         <div class="order-items">
                             ${order.items.map(item => `
                                 <div class="order-item">
-                                    <span>${item.menuName} x ${item.quantity}</span>
-                                    <span>${(item.price * item.quantity).toLocaleString()}원</span>
+                                    <span><strong>${item.menuName}</strong> x ${item.quantity}</span>
+                                    <span style="color: #4CAF50; font-weight: 600;">${(item.price * item.quantity).toLocaleString()}원</span>
                                 </div>
                             `).join('')}
                         </div>
                         ${order.note ? `<div class="order-note">💬 ${order.note}</div>` : ''}
                         <div class="order-total">
-                            합계: ${order.totalPrice.toLocaleString()}원
+                            <strong>합계: ${order.totalPrice.toLocaleString()}원</strong>
                         </div>
                     </div>
                 `;
@@ -260,12 +293,28 @@
             });
         }
 
+        // 검색 기능
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('searchName');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    displayOrderList(e.target.value);
+                });
+            }
+        });
+
         // 자동 새로고침 (30초마다)
         setInterval(() => {
             const updatedSession = getSession(currentSession.id);
             if (updatedSession) {
                 currentSession = updatedSession;
+                const searchTerm = document.getElementById('searchName')?.value || '';
                 displayDashboard();
+                // 검색어가 있으면 유지
+                if (searchTerm) {
+                    document.getElementById('searchName').value = searchTerm;
+                    displayOrderList(searchTerm);
+                }
             }
         }, 30000);
     </script>

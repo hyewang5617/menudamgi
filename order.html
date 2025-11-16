@@ -33,19 +33,34 @@
                 <button class="btn btn-primary" onclick="location.href='index.html'">홈으로 돌아가기</button>
             </div>
 
+            <!-- 이름 입력 단계 -->
+            <div id="nameStep" style="display: none;">
+                <div class="session-info card">
+                    <h2 id="sessionTitleName"></h2>
+                    <p class="restaurant" id="restaurantNameStep"></p>
+                    <p class="deadline" id="deadlineInfoStep"></p>
+                </div>
+
+                <div class="card" style="text-align: center;">
+                    <h3>👋 환영합니다!</h3>
+                    <p style="margin-bottom: 24px;">주문을 시작하기 전에 이름을 입력해주세요</p>
+                    <div class="form-group">
+                        <input type="text" id="userNameInput" placeholder="이름을 입력하세요 (예: 홍길동)" style="font-size: 1.2rem; text-align: center;">
+                    </div>
+                    <button class="btn btn-primary btn-large" onclick="startOrder()">
+                        메뉴 선택하러 가기 →
+                    </button>
+                </div>
+            </div>
+
             <!-- 주문 폼 -->
             <div id="orderForm" style="display: none;">
                 <div class="session-info card">
                     <h2 id="sessionTitle"></h2>
                     <p class="restaurant" id="restaurantName"></p>
                     <p class="deadline" id="deadlineInfo"></p>
-                </div>
-
-                <div class="card">
-                    <h3>주문자 정보</h3>
-                    <div class="form-group">
-                        <label>이름 *</label>
-                        <input type="text" id="userName" placeholder="이름을 입력하세요">
+                    <div style="margin-top: 12px; padding: 12px; background: rgba(255,255,255,0.2); border-radius: 8px;">
+                        <strong>주문자: <span id="currentUserName"></span></strong>
                     </div>
                 </div>
 
@@ -86,6 +101,7 @@
     <script>
         let currentSession = null;
         let selectedItems = {}; // { menuId: quantity }
+        let currentUserName = '';
 
         // 페이지 로드시 세션 정보 가져오기
         window.addEventListener('DOMContentLoaded', () => {
@@ -111,7 +127,7 @@
             }
 
             currentSession = session;
-            displayOrderForm();
+            displayNameStep();
         });
 
         function showNotFound() {
@@ -124,13 +140,47 @@
             document.getElementById('expired').style.display = 'block';
         }
 
-        function displayOrderForm() {
+        function displayNameStep() {
             document.getElementById('loading').style.display = 'none';
+            document.getElementById('nameStep').style.display = 'block';
+
+            // 세션 정보 표시
+            document.getElementById('sessionTitleName').textContent = currentSession.name;
+            document.getElementById('restaurantNameStep').textContent = '🍽️ ' + currentSession.restaurant;
+            
+            const deadline = new Date(currentSession.deadline);
+            document.getElementById('deadlineInfoStep').textContent = 
+                '⏰ 마감: ' + deadline.toLocaleString('ko-KR');
+
+            // Enter 키로 진행
+            document.getElementById('userNameInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    startOrder();
+                }
+            });
+        }
+
+        function startOrder() {
+            const userName = document.getElementById('userNameInput').value.trim();
+            
+            if (!userName) {
+                alert('이름을 입력해주세요!');
+                document.getElementById('userNameInput').focus();
+                return;
+            }
+
+            currentUserName = userName;
+            document.getElementById('nameStep').style.display = 'none';
+            displayOrderForm();
+        }
+
+        function displayOrderForm() {
             document.getElementById('orderForm').style.display = 'block';
 
             // 세션 정보 표시
             document.getElementById('sessionTitle').textContent = currentSession.name;
             document.getElementById('restaurantName').textContent = '🍽️ ' + currentSession.restaurant;
+            document.getElementById('currentUserName').textContent = currentUserName;
             
             const deadline = new Date(currentSession.deadline);
             document.getElementById('deadlineInfo').textContent = 
@@ -222,13 +272,7 @@
         }
 
         function submitOrder() {
-            const userName = document.getElementById('userName').value.trim();
             const orderNote = document.getElementById('orderNote').value.trim();
-
-            if (!userName) {
-                alert('이름을 입력해주세요!');
-                return;
-            }
 
             if (Object.keys(selectedItems).length === 0) {
                 alert('최소 1개 이상의 메뉴를 선택해주세요!');
@@ -255,7 +299,7 @@
 
             const order = {
                 id: Date.now() + Math.random(),
-                userName: userName,
+                userName: currentUserName,
                 items: orderItems,
                 totalPrice: totalPrice,
                 note: orderNote,
@@ -266,10 +310,9 @@
             addOrderToSession(currentSession.id, order);
 
             // 완료 알림
-            alert(`주문이 완료되었습니다!\n\n주문자: ${userName}\n총 금액: ${totalPrice.toLocaleString()}원`);
+            alert(`주문이 완료되었습니다!\n\n주문자: ${currentUserName}\n총 금액: ${totalPrice.toLocaleString()}원\n\n창을 닫으셔도 됩니다!`);
             
             // 폼 초기화
-            document.getElementById('userName').value = '';
             document.getElementById('orderNote').value = '';
             selectedItems = {};
             document.querySelectorAll('.qty-input').forEach(input => input.value = 0);
