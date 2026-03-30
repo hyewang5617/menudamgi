@@ -168,10 +168,9 @@
                 return;
             }
 
-            const sortedMenu = [...menuItems].sort((a, b) => b.price - a.price);
             preview.innerHTML = `
                 <div class="menu-grid">
-                    ${sortedMenu.map(item => `
+                    ${menuItems.map(item => `
                         <div class="menu-item-preview">
                             <div>
                                 <span class="menu-name">${escapeHtml(item.name)}</span>

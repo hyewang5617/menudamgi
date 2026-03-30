@@ -45,6 +45,37 @@
                     </div>
                     <button class="btn btn-primary btn-large" onclick="startOrder()">메뉴 고르기</button>
                 </div>
+
+                <div class="card">
+                    <h3>이 홈페이지 사용설명</h3>
+                    <div style="display: flex; flex-direction: column; gap: 14px;">
+                        <div>
+                            <strong>1. 이름을 입력해 주세요.</strong>
+                            <p style="margin: 6px 0 0;">같은 이름으로 다시 들어오면 기존 주문을 이어서 수정할 수 있어요.</p>
+                        </div>
+                        <div>
+                            <strong>2. 원하는 메뉴 수량을 선택해 주세요.</strong>
+                            <p style="margin: 6px 0 0;">수량을 올리면 필요한 메뉴 아래에 선택 옵션이 펼쳐집니다.</p>
+                        </div>
+                        <div>
+                            <strong>3. HOT / ICE가 필요한 메뉴는 꼭 골라 주세요.</strong>
+                            <p style="margin: 6px 0 0;">온도 선택이 필요한 메뉴만 따로 표시됩니다.</p>
+                        </div>
+                        <div>
+                            <strong>4. 요청사항이 있으면 적어 주세요.</strong>
+                            <p style="margin: 6px 0 0;">예: 연하게, 덜 달게, 얼음 적게 등</p>
+                        </div>
+                        <div>
+                            <strong>5. 주문 완료 버튼을 누르면 끝입니다.</strong>
+                            <p style="margin: 6px 0 0;">관리자 페이지에서 주문 내역이 바로 확인됩니다.</p>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 24px; padding-top: 18px; border-top: 1px solid #e0e0e0; text-align: center;">
+                        <p style="margin: 0; font-size: 0.95rem; color: #666;">Made by hyewang5617</p>
+                        <p style="margin: 6px 0 0; font-size: 0.9rem; color: #999;">Copyright © hyewang5617. All rights reserved.</p>
+                    </div>
+                </div>
             </div>
 
             <div id="orderForm" style="display: none;">
@@ -158,9 +189,7 @@
 
         function displayMenuList() {
             const menuList = document.getElementById('menuList');
-            const sortedMenu = [...currentSession.menu].sort((a, b) => b.price - a.price);
-
-            menuList.innerHTML = sortedMenu.map(item => `
+            menuList.innerHTML = currentSession.menu.map(item => `
                 <div class="menu-item" id="menu-card-${item.id}">
                     <div class="menu-item-main">
                         <div class="menu-info">
