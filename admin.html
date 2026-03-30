@@ -19,12 +19,12 @@
 
                 <div class="form-group">
                     <label>세션 이름</label>
-                    <input type="text" id="sessionName" placeholder="예: 오늘 점심, 팀 회식">
+                    <input type="text" id="sessionName" placeholder="예: 오늘 점심 주문">
                 </div>
 
                 <div class="form-group">
                     <label>식당 이름</label>
-                    <input type="text" id="restaurantName" placeholder="예: 맘스터치, 교촌치킨">
+                    <input type="text" id="restaurantName" placeholder="예: 메가커피">
                 </div>
 
                 <div class="form-group">
@@ -40,8 +40,8 @@
                         <button type="button" class="btn btn-small btn-secondary" onclick="saveAsTemplate()">템플릿 저장</button>
                         <button type="button" class="btn btn-small btn-secondary" onclick="smartParse()">자동 파싱</button>
                     </div>
-                    <p class="hint">한 줄에 하나씩 `메뉴명|가격` 형식으로 입력하세요.</p>
-                    <textarea id="menuInput" rows="10" placeholder="싸이버거|5900&#10;치즈버거|5200&#10;감자튀김|2500"></textarea>
+                    <p class="hint">한 줄에 하나씩 `메뉴명|가격` 형식으로 입력해 주세요.</p>
+                    <textarea id="menuInput" rows="10" placeholder="아메리카노|2000&#10;카페라떼|3000&#10;초코라떼|3500"></textarea>
                 </div>
 
                 <div class="form-group">
@@ -52,10 +52,10 @@
                 </div>
 
                 <div class="form-group">
-                    <label>메뉴 옵션 설정</label>
-                    <p class="hint">사용자가 메뉴를 고르면 아래에 펼쳐질 옵션 그룹을 메뉴별로 추가할 수 있어요.</p>
-                    <div id="menuOptionEditor" class="menu-option-editor">
-                        <p class="empty">메뉴를 먼저 입력해 주세요.</p>
+                    <label>HOT / ICE 선택 허용 메뉴</label>
+                    <p class="hint">체크한 메뉴만 주문 화면에서 HOT / ICE 선택 목록이 열립니다.</p>
+                    <div id="temperatureMenuEditor" class="menu-option-editor">
+                        <p class="empty">메뉴를 입력하면 여기서 선택할 수 있습니다.</p>
                     </div>
                 </div>
 
@@ -97,7 +97,7 @@
             deleteTemplate
         } from './firebase.js';
 
-        let menuOptionDrafts = {};
+        let temperatureEnabledMenus = {};
 
         function escapeHtml(value) {
             return String(value)
@@ -109,7 +109,9 @@
         }
 
         function escapeForInline(value) {
-            return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            return String(value)
+                .replace(/\\/g, '\\\\')
+                .replace(/'/g, "\\'");
         }
 
         function parseMenuLines(menuText) {
@@ -119,88 +121,43 @@
                 .filter(Boolean)
                 .map(line => {
                     const parts = line.split('|');
-                    if (parts.length !== 2) return null;
+                    if (parts.length !== 2) {
+                        return null;
+                    }
 
                     const name = parts[0].trim();
                     const price = parseInt(parts[1].replace(/,/g, '').trim(), 10);
 
-                    if (!name || Number.isNaN(price)) return null;
+                    if (!name || Number.isNaN(price)) {
+                        return null;
+                    }
+
                     return { name, price };
                 })
                 .filter(Boolean);
         }
 
-        function createEmptyOptionGroup() {
-            return {
-                id: `${Date.now()}-${Math.random()}`,
-                name: '',
-                type: 'single',
-                required: false,
-                choicesText: ''
-            };
+        function buildHotIceOptions() {
+            return [
+                {
+                    id: 'temperature',
+                    name: '온도',
+                    type: 'single',
+                    required: true,
+                    choices: [
+                        { id: 'hot', name: 'HOT', price: 0 },
+                        { id: 'ice', name: 'ICE', price: 0 }
+                    ]
+                }
+            ];
         }
 
-        function buildMenuOptions(menuName) {
-            return (menuOptionDrafts[menuName] || [])
-                .map(group => {
-                    const choices = group.choicesText
-                        .split('\n')
-                        .map(line => line.trim())
-                        .filter(Boolean)
-                        .map(line => {
-                            const [choiceNameRaw, choicePriceRaw = '0'] = line.split('|');
-                            const choiceName = choiceNameRaw?.trim();
-                            const choicePrice = parseInt(choicePriceRaw.replace(/,/g, '').trim(), 10);
-
-                            if (!choiceName || Number.isNaN(choicePrice)) {
-                                return null;
-                            }
-
-                            return {
-                                id: `${group.id}-${choiceName}`,
-                                name: choiceName,
-                                price: choicePrice
-                            };
-                        })
-                        .filter(Boolean);
-
-                    if (!group.name.trim() || choices.length === 0) {
-                        return null;
-                    }
-
-                    return {
-                        id: `${menuName}-${group.id}`,
-                        name: group.name.trim(),
-                        type: group.type === 'multiple' ? 'multiple' : 'single',
-                        required: Boolean(group.required),
-                        choices
-                    };
-                })
-                .filter(Boolean);
-        }
-
-        function hydrateOptionDraftsFromMenu(menuItems) {
-            const nextDrafts = {};
-
+        function syncTemperatureFlags(menuItems) {
+            const nextFlags = {};
             menuItems.forEach(item => {
-                nextDrafts[item.name] = (item.options || []).map(group => ({
-                    id: group.id || `${Date.now()}-${Math.random()}`,
-                    name: group.name || '',
-                    type: group.type === 'multiple' ? 'multiple' : 'single',
-                    required: Boolean(group.required),
-                    choicesText: (group.choices || []).map(choice => `${choice.name}|${choice.price || 0}`).join('\n')
-                }));
+                nextFlags[item.name] = Boolean(temperatureEnabledMenus[item.name]);
             });
-
-            menuOptionDrafts = nextDrafts;
-        }
-
-        function syncMenuOptionDrafts(menuItems) {
-            const nextDrafts = {};
-            menuItems.forEach(item => {
-                nextDrafts[item.name] = menuOptionDrafts[item.name] || [];
-            });
-            menuOptionDrafts = nextDrafts;
+            temperatureEnabledMenus = nextFlags;
         }
 
         function renderMenuPreview(menuItems) {
@@ -214,97 +171,51 @@
             const sortedMenu = [...menuItems].sort((a, b) => b.price - a.price);
             preview.innerHTML = `
                 <div class="menu-grid">
-                    ${sortedMenu.map(item => {
-                        const optionCount = buildMenuOptions(item.name).length;
-                        return `
-                            <div class="menu-item-preview">
-                                <div>
-                                    <span class="menu-name">${escapeHtml(item.name)}</span>
-                                    ${optionCount > 0 ? `<div class="menu-option-badge">${optionCount} option group(s)</div>` : ''}
-                                </div>
-                                <span class="menu-price">${item.price.toLocaleString()} KRW</span>
+                    ${sortedMenu.map(item => `
+                        <div class="menu-item-preview">
+                            <div>
+                                <span class="menu-name">${escapeHtml(item.name)}</span>
+                                ${temperatureEnabledMenus[item.name] ? '<div class="menu-option-badge">HOT / ICE 선택 가능</div>' : ''}
                             </div>
-                        `;
-                    }).join('')}
+                            <span class="menu-price">${item.price.toLocaleString()}원</span>
+                        </div>
+                    `).join('')}
                 </div>
             `;
         }
 
-        function renderMenuOptionEditor(menuItems) {
-            const editor = document.getElementById('menuOptionEditor');
+        function renderTemperatureMenuEditor(menuItems) {
+            const editor = document.getElementById('temperatureMenuEditor');
 
             if (menuItems.length === 0) {
-                editor.innerHTML = '<p class="empty">메뉴를 먼저 입력해 주세요.</p>';
+                editor.innerHTML = '<p class="empty">메뉴를 입력하면 여기서 선택할 수 있습니다.</p>';
                 return;
             }
 
-            editor.innerHTML = menuItems.map(item => {
-                const groups = menuOptionDrafts[item.name] || [];
-                const inlineName = escapeForInline(item.name);
-
-                return `
-                    <div class="menu-option-card">
-                        <div class="menu-option-card-header">
-                            <div>
-                                <strong>${escapeHtml(item.name)}</strong>
-                                <p>${item.price.toLocaleString()} KRW</p>
-                            </div>
-                            <button type="button" class="btn btn-small btn-secondary" onclick="addOptionGroup('${inlineName}')">Add group</button>
-                        </div>
-                        <div class="menu-option-group-list">
-                            ${groups.length === 0 ? '<p class="empty option-empty">No options yet.</p>' : groups.map(group => `
-                                <div class="menu-option-group">
-                                    <div class="menu-option-group-toolbar">
-                                        <strong>Option group</strong>
-                                        <button type="button" class="btn btn-small" onclick="removeOptionGroup('${inlineName}', '${group.id}')">Remove</button>
-                                    </div>
-                                    <div class="menu-option-fields">
-                                        <input type="text" value="${escapeHtml(group.name)}" placeholder="e.g. Spice, Topping, Side" oninput="updateOptionGroupField('${inlineName}', '${group.id}', 'name', this.value)">
-                                        <select onchange="updateOptionGroupField('${inlineName}', '${group.id}', 'type', this.value)">
-                                            <option value="single" ${group.type === 'single' ? 'selected' : ''}>Single select</option>
-                                            <option value="multiple" ${group.type === 'multiple' ? 'selected' : ''}>Multi select</option>
-                                        </select>
-                                        <label class="option-checkbox">
-                                            <input type="checkbox" ${group.required ? 'checked' : ''} onchange="updateOptionGroupField('${inlineName}', '${group.id}', 'required', this.checked)">
-                                            Required
-                                        </label>
-                                    </div>
-                                    <textarea rows="4" placeholder="One choice per line&#10;Regular|0&#10;Extra Cheese|500" oninput="updateOptionGroupField('${inlineName}', '${group.id}', 'choicesText', this.value)">${escapeHtml(group.choicesText)}</textarea>
-                                </div>
-                            `).join('')}
-                        </div>
+            editor.innerHTML = `
+                <div class="menu-option-card">
+                    <div class="menu-option-group-list">
+                        ${menuItems.map(item => `
+                            <label class="option-choice">
+                                <input
+                                    type="checkbox"
+                                    ${temperatureEnabledMenus[item.name] ? 'checked' : ''}
+                                    onchange="toggleTemperatureMenu('${escapeForInline(item.name)}', this.checked)"
+                                >
+                                <span>${escapeHtml(item.name)}</span>
+                                <span class="option-choice-price">HOT / ICE</span>
+                            </label>
+                        `).join('')}
                     </div>
-                `;
-            }).join('');
+                </div>
+            `;
         }
 
         function refreshMenuBuilder() {
             const menuItems = parseMenuLines(document.getElementById('menuInput').value);
-            syncMenuOptionDrafts(menuItems);
+            syncTemperatureFlags(menuItems);
             renderMenuPreview(menuItems);
-            renderMenuOptionEditor(menuItems);
-        }
-
-        function addOptionGroup(menuName) {
-            if (!menuOptionDrafts[menuName]) {
-                menuOptionDrafts[menuName] = [];
-            }
-
-            menuOptionDrafts[menuName].push(createEmptyOptionGroup());
-            refreshMenuBuilder();
-        }
-
-        function removeOptionGroup(menuName, groupId) {
-            menuOptionDrafts[menuName] = (menuOptionDrafts[menuName] || []).filter(group => group.id !== groupId);
-            refreshMenuBuilder();
-        }
-
-        function updateOptionGroupField(menuName, groupId, field, value) {
-            const group = (menuOptionDrafts[menuName] || []).find(item => item.id === groupId);
-            if (!group) return;
-
-            group[field] = value;
-            renderMenuPreview(parseMenuLines(document.getElementById('menuInput').value));
+            renderTemperatureMenuEditor(menuItems);
         }
 
         function smartParse() {
@@ -346,7 +257,17 @@
 
             document.getElementById('menuInput').value = parsed.join('\n');
             refreshMenuBuilder();
-            alert(`${parsed.length}개 메뉴를 정리했습니다.`);
+        }
+
+        function hydrateTemperatureFlags(menuItems) {
+            const nextFlags = {};
+            menuItems.forEach(item => {
+                nextFlags[item.name] = Boolean(
+                    item.temperatureSelectable ||
+                    (item.options || []).some(option => option.id === 'temperature')
+                );
+            });
+            temperatureEnabledMenus = nextFlags;
         }
 
         async function loadMenuFromSession(sessionId) {
@@ -355,7 +276,7 @@
 
             document.getElementById('menuInput').value = session.menu.map(item => `${item.name}|${item.price}`).join('\n');
             document.getElementById('restaurantName').value = session.restaurant;
-            hydrateOptionDraftsFromMenu(session.menu || []);
+            hydrateTemperatureFlags(session.menu || []);
             refreshMenuBuilder();
             closeMenuModal();
         }
@@ -399,7 +320,8 @@
                 menu: menuItems.map(item => ({
                     name: item.name,
                     price: item.price,
-                    options: buildMenuOptions(item.name)
+                    temperatureSelectable: Boolean(temperatureEnabledMenus[item.name]),
+                    options: temperatureEnabledMenus[item.name] ? buildHotIceOptions() : []
                 })),
                 createdAt: new Date().toISOString()
             });
@@ -413,7 +335,7 @@
 
             document.getElementById('menuInput').value = template.menu.map(item => `${item.name}|${item.price}`).join('\n');
             document.getElementById('restaurantName').value = template.restaurantName;
-            hydrateOptionDraftsFromMenu(template.menu || []);
+            hydrateTemperatureFlags(template.menu || []);
             refreshMenuBuilder();
             closeMenuModal();
         }
@@ -473,13 +395,19 @@
                     id: `${Date.now()}-${Math.random()}`,
                     name: item.name,
                     price: item.price,
-                    options: buildMenuOptions(item.name)
+                    temperatureSelectable: Boolean(temperatureEnabledMenus[item.name]),
+                    options: temperatureEnabledMenus[item.name] ? buildHotIceOptions() : []
                 })),
                 orders: [],
                 createdAt: new Date().toISOString()
             };
 
-            await saveSession(session);
+            const saved = await saveSession(session);
+            if (!saved) {
+                alert('주문 세션 생성에 실패했습니다. 브라우저 콘솔도 한 번 확인해 주세요.');
+                return;
+            }
+
             location.href = `dashboard.html?session=${session.id}`;
         }
 
@@ -537,7 +465,7 @@
             const sessions = await getAllSessions();
             const templates = getAllTemplates();
             const backupData = {
-                version: '2.0',
+                version: '2.1',
                 exportDate: new Date().toISOString(),
                 sessions,
                 templates
@@ -586,6 +514,11 @@
             }
         }
 
+        function toggleTemperatureMenu(menuName, checked) {
+            temperatureEnabledMenus[menuName] = checked;
+            renderMenuPreview(parseMenuLines(document.getElementById('menuInput').value));
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             const now = new Date();
             now.setHours(17, 0, 0, 0);
@@ -614,9 +547,7 @@
         window.copyLink = copyLink;
         window.exportData = exportData;
         window.importData = importData;
-        window.addOptionGroup = addOptionGroup;
-        window.removeOptionGroup = removeOptionGroup;
-        window.updateOptionGroupField = updateOptionGroupField;
+        window.toggleTemperatureMenu = toggleTemperatureMenu;
     </script>
 </body>
 </html>

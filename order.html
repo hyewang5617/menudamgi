@@ -9,7 +9,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>점심 주문하기</h1>
+            <h1>주문하기</h1>
             <button class="btn btn-small" onclick="location.href='index.html'">처음으로</button>
         </header>
 
@@ -26,7 +26,7 @@
 
             <div id="expired" class="error-box" style="display: none;">
                 <h2>주문이 마감되었습니다</h2>
-                <p>마감 시간이 지나 더 이상 주문할 수 없어요.</p>
+                <p>마감 시간이 지나 더 이상 주문할 수 없습니다.</p>
                 <button class="btn btn-primary" onclick="location.href='index.html'">처음으로</button>
             </div>
 
@@ -38,14 +38,12 @@
                 </div>
 
                 <div class="card" style="text-align: center;">
-                    <h3>주문자 이름</h3>
-                    <p style="margin-bottom: 24px;">주문 시작 전에 이름을 입력해 주세요.</p>
+                    <h3>이름 입력</h3>
+                    <p style="margin-bottom: 24px;">주문 전에 이름을 입력해 주세요.</p>
                     <div class="form-group">
                         <input type="text" id="userNameInput" placeholder="이름을 입력하세요" style="font-size: 1.2rem; text-align: center;">
                     </div>
-                    <button class="btn btn-primary btn-large" onclick="startOrder()">
-                        메뉴 고르기
-                    </button>
+                    <button class="btn btn-primary btn-large" onclick="startOrder()">메뉴 고르기</button>
                 </div>
             </div>
 
@@ -61,7 +59,7 @@
 
                 <div class="card">
                     <h3>메뉴 선택</h3>
-                    <p class="hint">수량을 1개 이상 올리면 아래에 옵션 선택 단락이 펼쳐집니다.</p>
+                    <p class="hint">수량을 선택하면 필요한 메뉴 아래에 HOT / ICE 선택 목록이 펼쳐집니다.</p>
                     <div id="menuList" class="menu-list"></div>
                 </div>
 
@@ -78,12 +76,10 @@
 
                 <div class="form-group">
                     <label>요청사항</label>
-                    <textarea id="orderNote" rows="3" placeholder="예: 수저 빼주세요, 음료는 얼음 적게 주세요"></textarea>
+                    <textarea id="orderNote" rows="3" placeholder="예: 덜 달게 해주세요"></textarea>
                 </div>
 
-                <button class="btn btn-primary btn-large" onclick="submitOrder()">
-                    주문 완료하기
-                </button>
+                <button class="btn btn-primary btn-large" onclick="submitOrder()">주문 완료하기</button>
 
                 <div class="info-box">
                     <p><strong>현재 주문 인원: <span id="currentOrderCount">0</span>명</strong></p>
@@ -101,34 +97,111 @@
 
         let currentSession = null;
         let selectedItems = {};
-        let selectedOptions = {};
+        let selectedTemperature = {};
         let currentUserName = '';
         let existingOrder = null;
 
-        window.addEventListener('DOMContentLoaded', async () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const sessionId = urlParams.get('session');
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
 
-            if (!sessionId) {
-                showNotFound();
-                return;
+        function getMenuItem(menuId) {
+            return currentSession.menu.find(item => String(item.id) === String(menuId));
+        }
+
+        function supportsTemperature(menuItem) {
+            return Boolean(
+                menuItem.temperatureSelectable ||
+                (menuItem.options || []).some(option => option.id === 'temperature')
+            );
+        }
+
+        function getTemperatureChoice(menuItem, choiceId) {
+            const group = (menuItem.options || []).find(option => option.id === 'temperature');
+            return group?.choices?.find(choice => choice.id === choiceId) || null;
+        }
+
+        function renderTemperaturePanel(menuItem) {
+            if (!supportsTemperature(menuItem)) {
+                return '';
             }
 
-            const session = await getSession(sessionId);
-            if (!session) {
-                showNotFound();
-                return;
-            }
+            const currentValue = selectedTemperature[menuItem.id] || '';
+            return `
+                <div id="options-${menuItem.id}" class="menu-options-panel">
+                    <div class="option-group">
+                        <div class="option-group-title">
+                            <span>온도 선택</span>
+                            <span class="option-group-meta">1개 선택</span>
+                        </div>
+                        <div class="option-choice-list">
+                            <label class="option-choice">
+                                <input type="radio" name="temperature-${menuItem.id}" value="hot" ${currentValue === 'hot' ? 'checked' : ''} onchange="setTemperatureOption('${menuItem.id}', 'hot')">
+                                <span>HOT</span>
+                                <span class="option-choice-price">기본</span>
+                            </label>
+                            <label class="option-choice">
+                                <input type="radio" name="temperature-${menuItem.id}" value="ice" ${currentValue === 'ice' ? 'checked' : ''} onchange="setTemperatureOption('${menuItem.id}', 'ice')">
+                                <span>ICE</span>
+                                <span class="option-choice-price">기본</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
 
-            const deadline = new Date(session.deadline);
-            if (deadline < new Date()) {
-                showExpired();
-                return;
-            }
+        function displayMenuList() {
+            const menuList = document.getElementById('menuList');
+            const sortedMenu = [...currentSession.menu].sort((a, b) => b.price - a.price);
 
-            currentSession = session;
-            displayNameStep();
-        });
+            menuList.innerHTML = sortedMenu.map(item => `
+                <div class="menu-item" id="menu-card-${item.id}">
+                    <div class="menu-item-main">
+                        <div class="menu-info">
+                            <span class="menu-name">${escapeHtml(item.name)}</span>
+                            <span class="menu-price">${item.price.toLocaleString()}원</span>
+                        </div>
+                        <div class="quantity-control">
+                            <button class="qty-btn" onclick="changeQuantity('${item.id}', -1)">-</button>
+                            <input
+                                type="number"
+                                id="qty-${item.id}"
+                                value="${selectedItems[item.id] || 0}"
+                                min="0"
+                                class="qty-input"
+                                onchange="updateQuantity('${item.id}', this.value)"
+                            >
+                            <button class="qty-btn" onclick="changeQuantity('${item.id}', 1)">+</button>
+                        </div>
+                    </div>
+                    ${renderTemperaturePanel(item)}
+                </div>
+            `).join('');
+
+            syncOptionPanels();
+        }
+
+        function syncOptionPanels() {
+            currentSession.menu.forEach(item => {
+                const panel = document.getElementById(`options-${item.id}`);
+                const card = document.getElementById(`menu-card-${item.id}`);
+                const isOpen = (selectedItems[item.id] || 0) > 0;
+
+                if (panel) {
+                    panel.classList.toggle('is-open', isOpen);
+                }
+
+                if (card) {
+                    card.classList.toggle('is-active', isOpen);
+                }
+            });
+        }
 
         function showNotFound() {
             document.getElementById('loading').style.display = 'none';
@@ -178,15 +251,11 @@
             }
 
             document.getElementById('nameStep').style.display = 'none';
-            displayOrderForm();
-        }
-
-        function displayOrderForm() {
             document.getElementById('orderForm').style.display = 'block';
             document.getElementById('sessionTitle').textContent = currentSession.name;
             document.getElementById('restaurantName').textContent = `식당: ${currentSession.restaurant}`;
-            document.getElementById('currentUserName').textContent = currentUserName;
             document.getElementById('deadlineInfo').textContent = `마감: ${new Date(currentSession.deadline).toLocaleString('ko-KR')}`;
+            document.getElementById('currentUserName').textContent = currentUserName;
             document.getElementById('currentOrderCount').textContent = currentSession.orders.length;
 
             displayMenuList();
@@ -198,99 +267,14 @@
             }
         }
 
-        function getMenuItem(menuId) {
-            return currentSession.menu.find(item => String(item.id) === String(menuId));
-        }
-
-        function escapeHtml(value) {
-            return String(value)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
-        }
-
-        function getSelectedChoiceIds(menuId, groupId) {
-            return selectedOptions[menuId]?.[groupId] || [];
-        }
-
-        function renderOptionGroups(menuItem) {
-            const groups = menuItem.options || [];
-            if (groups.length === 0) {
-                return '';
-            }
-
-            return `
-                <div id="options-${menuItem.id}" class="menu-options-panel">
-                    ${groups.map(group => `
-                        <div class="option-group">
-                            <div class="option-group-title">
-                                <span>${escapeHtml(group.name)}</span>
-                                <span class="option-group-meta">${group.type === 'multiple' ? '복수 선택' : '1개 선택'}${group.required ? ' · 필수' : ''}</span>
-                            </div>
-                            <div class="option-choice-list">
-                                ${(group.choices || []).map(choice => {
-                                    const inputType = group.type === 'multiple' ? 'checkbox' : 'radio';
-                                    return `
-                                        <label class="option-choice">
-                                            <input
-                                                type="${inputType}"
-                                                name="option-${menuItem.id}-${group.id}"
-                                                value="${choice.id}"
-                                                onchange="toggleOptionSelection('${menuItem.id}', '${group.id}', '${choice.id}', '${group.type}')"
-                                            >
-                                            <span>${escapeHtml(choice.name)}</span>
-                                            <span class="option-choice-price">${choice.price > 0 ? `+${choice.price.toLocaleString()}원` : '추가금액 없음'}</span>
-                                        </label>
-                                    `;
-                                }).join('')}
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-        }
-
-        function displayMenuList() {
-            const menuList = document.getElementById('menuList');
-            const sortedMenu = [...currentSession.menu].sort((a, b) => b.price - a.price);
-
-            menuList.innerHTML = sortedMenu.map(item => `
-                <div class="menu-item" id="menu-card-${item.id}">
-                    <div class="menu-item-main">
-                        <div class="menu-info">
-                            <span class="menu-name">${escapeHtml(item.name)}</span>
-                            <span class="menu-price">${item.price.toLocaleString()}원</span>
-                        </div>
-                        <div class="quantity-control">
-                            <button class="qty-btn" onclick="changeQuantity('${item.id}', -1)">-</button>
-                            <input
-                                type="number"
-                                id="qty-${item.id}"
-                                value="${selectedItems[item.id] || 0}"
-                                min="0"
-                                class="qty-input"
-                                onchange="updateQuantity('${item.id}', this.value)"
-                            >
-                            <button class="qty-btn" onclick="changeQuantity('${item.id}', 1)">+</button>
-                        </div>
-                    </div>
-                    ${renderOptionGroups(item)}
-                </div>
-            `).join('');
-
-            syncOptionInputs();
-        }
-
         function loadExistingOrder() {
             existingOrder.items.forEach(item => {
                 selectedItems[item.menuId] = item.quantity;
-                selectedOptions[item.menuId] = {};
 
-                (item.selectedOptions || []).forEach(group => {
-                    selectedOptions[item.menuId][group.groupId] = group.choiceIds || [];
-                });
+                const temperatureGroup = (item.selectedOptions || []).find(group => group.groupId === 'temperature');
+                if (temperatureGroup && temperatureGroup.choiceIds?.[0]) {
+                    selectedTemperature[item.menuId] = temperatureGroup.choiceIds[0];
+                }
 
                 const input = document.getElementById(`qty-${item.menuId}`);
                 if (input) {
@@ -302,7 +286,7 @@
                 document.getElementById('orderNote').value = existingOrder.note;
             }
 
-            syncOptionInputs();
+            displayMenuList();
             updateOrderSummary();
         }
 
@@ -320,106 +304,63 @@
                 selectedItems[menuId] = nextQuantity;
             } else {
                 delete selectedItems[menuId];
-                delete selectedOptions[menuId];
+                delete selectedTemperature[menuId];
             }
 
-            syncOptionPanel(menuId);
+            syncOptionPanels();
             updateOrderSummary();
         }
 
-        function syncOptionPanel(menuId) {
-            const panel = document.getElementById(`options-${menuId}`);
-            const card = document.getElementById(`menu-card-${menuId}`);
-            const isOpen = (selectedItems[menuId] || 0) > 0;
-
-            if (panel) {
-                panel.classList.toggle('is-open', isOpen);
-            }
-
-            if (card) {
-                card.classList.toggle('is-active', isOpen);
-            }
-        }
-
-        function syncOptionInputs() {
-            currentSession.menu.forEach(item => syncOptionPanel(item.id));
-
-            Object.entries(selectedOptions).forEach(([menuId, groupMap]) => {
-                Object.entries(groupMap).forEach(([groupId, choiceIds]) => {
-                    document.querySelectorAll(`input[name="option-${menuId}-${groupId}"]`).forEach(input => {
-                        input.checked = choiceIds.includes(input.value);
-                    });
-                });
-            });
-        }
-
-        function toggleOptionSelection(menuId, groupId, choiceId, groupType) {
-            if (!selectedOptions[menuId]) {
-                selectedOptions[menuId] = {};
-            }
-
-            const currentChoiceIds = getSelectedChoiceIds(menuId, groupId);
-
-            if (groupType === 'multiple') {
-                selectedOptions[menuId][groupId] = currentChoiceIds.includes(choiceId)
-                    ? currentChoiceIds.filter(id => id !== choiceId)
-                    : [...currentChoiceIds, choiceId];
-            } else {
-                selectedOptions[menuId][groupId] = [choiceId];
-            }
-
+        function setTemperatureOption(menuId, value) {
+            selectedTemperature[menuId] = value;
             updateOrderSummary();
         }
 
-        function collectMenuOptionSelection(menuItem) {
-            const groupSelections = [];
-            let optionUnitPrice = 0;
-
-            (menuItem.options || []).forEach(group => {
-                const selectedIds = getSelectedChoiceIds(menuItem.id, group.id);
-                const selectedChoices = (group.choices || []).filter(choice => selectedIds.includes(choice.id));
-
-                if (selectedChoices.length === 0) {
-                    return;
-                }
-
-                const extra = selectedChoices.reduce((sum, choice) => sum + (choice.price || 0), 0);
-                optionUnitPrice += extra;
-                groupSelections.push({
-                    groupId: group.id,
-                    groupName: group.name,
-                    choiceIds: selectedChoices.map(choice => choice.id),
-                    choices: selectedChoices.map(choice => ({
-                        id: choice.id,
-                        name: choice.name,
-                        price: choice.price || 0
-                    }))
-                });
-            });
-
-            return { groupSelections, optionUnitPrice };
-        }
-
-        function formatSelectedOptions(groupSelections) {
-            return groupSelections.map(group => `${group.groupName}: ${group.choices.map(choice => choice.name).join(', ')}`);
-        }
-
-        function validateRequiredOptions() {
+        function validateTemperatureSelections() {
             for (const menuId of Object.keys(selectedItems)) {
                 const menuItem = getMenuItem(menuId);
-                if (!menuItem) continue;
+                if (!menuItem || !supportsTemperature(menuItem)) {
+                    continue;
+                }
 
-                for (const group of (menuItem.options || [])) {
-                    if (!group.required) continue;
-
-                    if (getSelectedChoiceIds(menuId, group.id).length === 0) {
-                        alert(`${menuItem.name}의 "${group.name}" 옵션을 선택해 주세요.`);
-                        return false;
-                    }
+                if (!selectedTemperature[menuId]) {
+                    alert(`${menuItem.name}의 HOT / ICE를 선택해 주세요.`);
+                    return false;
                 }
             }
 
             return true;
+        }
+
+        function buildSelectedOptions(menuItem) {
+            if (!supportsTemperature(menuItem)) {
+                return [];
+            }
+
+            const selectedValue = selectedTemperature[menuItem.id];
+            if (!selectedValue) {
+                return [];
+            }
+
+            const choice = getTemperatureChoice(menuItem, selectedValue);
+            if (!choice) {
+                return [];
+            }
+
+            return [
+                {
+                    groupId: 'temperature',
+                    groupName: '온도',
+                    choiceIds: [choice.id],
+                    choices: [
+                        {
+                            id: choice.id,
+                            name: choice.name,
+                            price: choice.price || 0
+                        }
+                    ]
+                }
+            ];
         }
 
         function updateOrderSummary() {
@@ -439,11 +380,12 @@
             menuIds.forEach(menuId => {
                 const quantity = selectedItems[menuId];
                 const menuItem = getMenuItem(menuId);
-                if (!menuItem) return;
+                if (!menuItem) {
+                    return;
+                }
 
-                const { groupSelections, optionUnitPrice } = collectMenuOptionSelection(menuItem);
-                const unitPrice = menuItem.price + optionUnitPrice;
-                const lineTotal = unitPrice * quantity;
+                const lineTotal = menuItem.price * quantity;
+                const selectedOptions = buildSelectedOptions(menuItem);
                 total += lineTotal;
 
                 html += `
@@ -452,7 +394,7 @@
                             <span>${escapeHtml(menuItem.name)} x ${quantity}</span>
                             <span>${lineTotal.toLocaleString()}원</span>
                         </div>
-                        ${groupSelections.length > 0 ? `<div class="summary-item-options">${escapeHtml(formatSelectedOptions(groupSelections).join(' / '))}</div>` : ''}
+                        ${selectedOptions.length > 0 ? `<div class="summary-item-options">온도: ${escapeHtml(selectedOptions[0].choices[0].name)}</div>` : ''}
                     </div>
                 `;
             });
@@ -470,34 +412,25 @@
                 return;
             }
 
-            if (!validateRequiredOptions()) {
+            if (!validateTemperatureSelections()) {
                 return;
             }
 
-            const orderItems = [];
-            let totalPrice = 0;
-
-            Object.keys(selectedItems).forEach(menuId => {
-                const quantity = selectedItems[menuId];
+            const orderItems = Object.keys(selectedItems).map(menuId => {
                 const menuItem = getMenuItem(menuId);
-                if (!menuItem) return;
+                const quantity = selectedItems[menuId];
 
-                const { groupSelections, optionUnitPrice } = collectMenuOptionSelection(menuItem);
-                const unitPrice = menuItem.price + optionUnitPrice;
-                const lineTotal = unitPrice * quantity;
-
-                orderItems.push({
+                return {
                     menuId,
                     menuName: menuItem.name,
                     price: menuItem.price,
-                    optionUnitPrice,
-                    unitPrice,
+                    unitPrice: menuItem.price,
                     quantity,
-                    selectedOptions: groupSelections
-                });
-
-                totalPrice += lineTotal;
+                    selectedOptions: buildSelectedOptions(menuItem)
+                };
             });
+
+            const totalPrice = orderItems.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
 
             const order = {
                 id: existingOrder ? existingOrder.id : Date.now() + Math.random(),
@@ -508,14 +441,17 @@
                 timestamp: new Date().toISOString()
             };
 
-            await updateOrderInSession(currentSession.id, currentUserName, order);
+            const saved = await updateOrderInSession(currentSession.id, currentUserName, order);
+            if (!saved) {
+                alert('주문 저장에 실패했습니다.');
+                return;
+            }
 
-            const actionText = existingOrder ? '수정되었습니다' : '완료되었습니다';
-            alert(`주문이 ${actionText}.\n\n주문자: ${currentUserName}\n총 금액: ${totalPrice.toLocaleString()}원`);
+            alert(`주문이 ${existingOrder ? '수정' : '완료'}되었습니다.\n\n주문자: ${currentUserName}\n총 금액: ${totalPrice.toLocaleString()}원`);
 
             document.getElementById('orderNote').value = '';
             selectedItems = {};
-            selectedOptions = {};
+            selectedTemperature = {};
             existingOrder = null;
             displayMenuList();
             updateOrderSummary();
@@ -527,10 +463,35 @@
             }
         }
 
+        window.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionId = urlParams.get('session');
+
+            if (!sessionId) {
+                showNotFound();
+                return;
+            }
+
+            const session = await getSession(sessionId);
+            if (!session) {
+                showNotFound();
+                return;
+            }
+
+            if (new Date(session.deadline) < new Date()) {
+                showExpired();
+                return;
+            }
+
+            currentSession = session;
+            displayNameStep();
+        });
+
         window.startOrder = startOrder;
         window.submitOrder = submitOrder;
         window.changeQuantity = changeQuantity;
-        window.toggleOptionSelection = toggleOptionSelection;
+        window.updateQuantity = updateQuantity;
+        window.setTemperatureOption = setTemperatureOption;
     </script>
 </body>
 </html>
