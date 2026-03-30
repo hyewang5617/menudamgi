@@ -9,31 +9,27 @@
 <body>
     <div class="container">
         <header>
-            <h1>🍽️ 주문하기</h1>
-            <button class="btn btn-small" onclick="location.href='index.html'">홈으로</button>
+            <h1>점심 주문하기</h1>
+            <button class="btn btn-small" onclick="location.href='index.html'">처음으로</button>
         </header>
 
         <main id="orderMain">
-            <!-- 로딩 중 -->
             <div id="loading" class="loading">
-                <p>주문 정보를 불러오는 중...</p>
+                <p>주문 정보를 불러오는 중입니다...</p>
             </div>
 
-            <!-- 세션 정보 없음 -->
             <div id="notFound" class="error-box" style="display: none;">
-                <h2>❌ 주문을 찾을 수 없습니다</h2>
-                <p>올바른 주문 링크로 접속했는지 확인해주세요.</p>
-                <button class="btn btn-primary" onclick="location.href='index.html'">홈으로 돌아가기</button>
+                <h2>주문 세션을 찾을 수 없습니다</h2>
+                <p>올바른 주문 링크인지 다시 확인해 주세요.</p>
+                <button class="btn btn-primary" onclick="location.href='index.html'">처음으로</button>
             </div>
 
-            <!-- 주문 마감됨 -->
             <div id="expired" class="error-box" style="display: none;">
-                <h2>⏰ 주문이 마감되었습니다</h2>
-                <p>이미 마감 시간이 지났습니다.</p>
-                <button class="btn btn-primary" onclick="location.href='index.html'">홈으로 돌아가기</button>
+                <h2>주문이 마감되었습니다</h2>
+                <p>마감 시간이 지나 더 이상 주문할 수 없어요.</p>
+                <button class="btn btn-primary" onclick="location.href='index.html'">처음으로</button>
             </div>
 
-            <!-- 이름 입력 단계 -->
             <div id="nameStep" style="display: none;">
                 <div class="session-info card">
                     <h2 id="sessionTitleName"></h2>
@@ -42,84 +38,17 @@
                 </div>
 
                 <div class="card" style="text-align: center;">
-                    <h3>👋 환영합니다!</h3>
-                    <p style="margin-bottom: 24px;">주문을 시작하기 전에 이름을 입력해주세요</p>
+                    <h3>주문자 이름</h3>
+                    <p style="margin-bottom: 24px;">주문 시작 전에 이름을 입력해 주세요.</p>
                     <div class="form-group">
-                        <input type="text" id="userNameInput" placeholder="이름을 입력하세요 (예: 홍길동)" style="font-size: 1.2rem; text-align: center;">
+                        <input type="text" id="userNameInput" placeholder="이름을 입력하세요" style="font-size: 1.2rem; text-align: center;">
                     </div>
                     <button class="btn btn-primary btn-large" onclick="startOrder()">
-                        메뉴 선택하러 가기 →
+                        메뉴 고르기
                     </button>
-                </div>
-
-                <!-- 사용 설명서 -->
-                <div class="card" style="text-align: left;">
-                    <h3>🍽️ 메뉴담기 사용법</h3>
-                    
-                    <div style="margin-top: 20px;">
-                        <h4 style="color: #4CAF50; margin-bottom: 12px;">📌 주문하는 방법</h4>
-                        
-                        <div style="margin-bottom: 16px;">
-                            <strong>1️⃣ 링크 클릭</strong>
-                            <p style="margin: 4px 0 0 20px; color: #666;">카톡으로 받은 주문 링크를 클릭하세요</p>
-                        </div>
-                        
-                        <div style="margin-bottom: 16px;">
-                            <strong>2️⃣ 이름 입력</strong>
-                            <p style="margin: 4px 0 0 20px; color: #666;">본인 이름을 입력하고 "메뉴 선택하러 가기" 버튼 클릭</p>
-                            <p style="margin: 4px 0 0 20px; color: #FF9800;">💡 같은 이름으로 다시 들어오면 이전 주문을 수정할 수 있어요!</p>
-                        </div>
-                        
-                        <div style="margin-bottom: 16px;">
-                            <strong>3️⃣ 메뉴 선택</strong>
-                            <p style="margin: 4px 0 0 20px; color: #666;">원하는 메뉴의 + 버튼을 눌러 수량 선택</p>
-                            <p style="margin: 4px 0 0 20px; color: #666;">여러 메뉴 선택 가능</p>
-                        </div>
-                        
-                        <div style="margin-bottom: 16px;">
-                            <strong>4️⃣ 요청사항 입력 (선택)</strong>
-                            <p style="margin: 4px 0 0 20px; color: #666;">양념 빼주세요, 포크 추가 등 요청사항이 있으면 입력</p>
-                            <p style="margin: 4px 0 0 20px; color: #FF9800;">💡 메뉴에 없는 항목은 요청사항에 적어주세요!</p>
-                        </div>
-                        
-                        <div style="margin-bottom: 16px;">
-                            <strong>5️⃣ 주문 완료</strong>
-                            <p style="margin: 4px 0 0 20px; color: #666;">"주문 완료하기" 버튼 클릭</p>
-                            <p style="margin: 4px 0 0 20px; color: #666;">완료 메시지 확인 후 창 닫기 ✅</p>
-                        </div>
-                    </div>
-
-                    <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid #eee;">
-                        <h4 style="color: #2196F3; margin-bottom: 12px;">❓ 자주 묻는 질문</h4>
-                        
-                        <div style="margin-bottom: 12px;">
-                            <strong>Q. 주문을 잘못했어요!</strong>
-                            <p style="margin: 4px 0 0 20px; color: #666;">A. 같은 링크로 다시 들어가서 <strong>같은 이름</strong>을 입력하세요. "기존 주문 수정" 선택하면 수정할 수 있어요.</p>
-                        </div>
-                        
-                        <div style="margin-bottom: 12px;">
-                            <strong>Q. 마감 시간이 지났어요</strong>
-                            <p style="margin: 4px 0 0 20px; color: #666;">A. 마감 후에는 주문이 안 돼요. 총무에게 문의하세요.</p>
-                        </div>
-                        
-                        <div style="margin-bottom: 12px;">
-                            <strong>Q. 링크가 안 열려요</strong>
-                            <p style="margin: 4px 0 0 20px; color: #666;">A. 총무가 아직 주문을 생성하지 않았을 수 있어요. 총무에게 문의하세요.</p>
-                        </div>
-                    </div>
-
-                    <div style="margin-top: 24px; padding: 16px; background: #FFF9C4; border-radius: 8px;">
-                        <h4 style="color: #F57C00; margin-bottom: 8px;">💡 꿀팁</h4>
-                        <ul style="margin: 0; padding-left: 20px; color: #666;">
-                            <li>메뉴는 가격이 <strong>비싼 순서대로</strong> 정렬되어 있어요</li>
-                            <li>주문 완료 후에도 마감 전까지는 <strong>수정 가능</strong>해요!</li>
-                            <li>창을 닫아도 주문은 <strong>저장</strong>돼요 ✅</li>
-                        </ul>
-                    </div>
                 </div>
             </div>
 
-            <!-- 주문 폼 -->
             <div id="orderForm" style="display: none;">
                 <div class="session-info card">
                     <h2 id="sessionTitle"></h2>
@@ -132,7 +61,7 @@
 
                 <div class="card">
                     <h3>메뉴 선택</h3>
-                    <p class="hint">원하는 메뉴를 선택하고 수량을 입력하세요</p>
+                    <p class="hint">수량을 1개 이상 올리면 아래에 옵션 선택 단락이 펼쳐집니다.</p>
                     <div id="menuList" class="menu-list"></div>
                 </div>
 
@@ -148,8 +77,8 @@
                 </div>
 
                 <div class="form-group">
-                    <label>요청사항 (선택)</label>
-                    <textarea id="orderNote" rows="3" placeholder="예: 양념 빼주세요, 포크 1개 추가해주세요"></textarea>
+                    <label>요청사항</label>
+                    <textarea id="orderNote" rows="3" placeholder="예: 수저 빼주세요, 음료는 얼음 적게 주세요"></textarea>
                 </div>
 
                 <button class="btn btn-primary btn-large" onclick="submitOrder()">
@@ -157,25 +86,25 @@
                 </button>
 
                 <div class="info-box">
-                    <p><strong>현재 주문 현황: <span id="currentOrderCount">0</span>명</strong></p>
+                    <p><strong>현재 주문 인원: <span id="currentOrderCount">0</span>명</strong></p>
                 </div>
             </div>
         </main>
     </div>
 
     <script type="module">
-        import { 
-            getSession, 
-            findOrderByUserName, 
-            updateOrderInSession 
+        import {
+            getSession,
+            findOrderByUserName,
+            updateOrderInSession
         } from './firebase.js';
 
         let currentSession = null;
-        let selectedItems = {}; // { menuId: quantity }
+        let selectedItems = {};
+        let selectedOptions = {};
         let currentUserName = '';
-        let existingOrder = null; // 기존 주문 (있는 경우)
+        let existingOrder = null;
 
-        // 페이지 로드시 세션 정보 가져오기
         window.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
             const sessionId = urlParams.get('session');
@@ -191,7 +120,6 @@
                 return;
             }
 
-            // 마감 여부 확인
             const deadline = new Date(session.deadline);
             if (deadline < new Date()) {
                 showExpired();
@@ -216,17 +144,12 @@
             document.getElementById('loading').style.display = 'none';
             document.getElementById('nameStep').style.display = 'block';
 
-            // 세션 정보 표시
             document.getElementById('sessionTitleName').textContent = currentSession.name;
-            document.getElementById('restaurantNameStep').textContent = '🍽️ ' + currentSession.restaurant;
-            
-            const deadline = new Date(currentSession.deadline);
-            document.getElementById('deadlineInfoStep').textContent = 
-                '⏰ 마감: ' + deadline.toLocaleString('ko-KR');
+            document.getElementById('restaurantNameStep').textContent = `식당: ${currentSession.restaurant}`;
+            document.getElementById('deadlineInfoStep').textContent = `마감: ${new Date(currentSession.deadline).toLocaleString('ko-KR')}`;
 
-            // Enter 키로 진행
-            document.getElementById('userNameInput').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
+            document.getElementById('userNameInput').addEventListener('keypress', (event) => {
+                if (event.key === 'Enter') {
                     startOrder();
                 }
             });
@@ -234,222 +157,380 @@
 
         async function startOrder() {
             const userName = document.getElementById('userNameInput').value.trim();
-            
+
             if (!userName) {
-                alert('이름을 입력해주세요!');
+                alert('이름을 입력해 주세요.');
                 document.getElementById('userNameInput').focus();
                 return;
             }
 
             currentUserName = userName;
-            
-            // 같은 이름의 기존 주문 확인
             existingOrder = await findOrderByUserName(currentSession.id, userName);
-            
+
             if (existingOrder) {
-                // 기존 주문이 있으면 알림 표시
                 const shouldLoadExisting = window.confirm(
-                    `'${userName}' 님의 기존 주문이 있습니다!\n\n` +
-                    `기존 주문을 불러와서 수정하시겠습니까?\n\n` +
-                    `[확인] - 기존 주문 수정\n` +
-                    `[취소] - 새로 주문하기`
+                    `'${userName}' 이름으로 기존 주문이 있습니다.\n\n기존 주문을 불러와서 수정할까요?\n\n[확인] 기존 주문 수정\n[취소] 새로 주문`
                 );
-                
+
                 if (!shouldLoadExisting) {
-                    // 새로 주문하기 선택
                     existingOrder = null;
                 }
             }
-            
+
             document.getElementById('nameStep').style.display = 'none';
             displayOrderForm();
         }
 
         function displayOrderForm() {
             document.getElementById('orderForm').style.display = 'block';
-
-            // 세션 정보 표시
             document.getElementById('sessionTitle').textContent = currentSession.name;
-            document.getElementById('restaurantName').textContent = '🍽️ ' + currentSession.restaurant;
+            document.getElementById('restaurantName').textContent = `식당: ${currentSession.restaurant}`;
             document.getElementById('currentUserName').textContent = currentUserName;
-            
-            const deadline = new Date(currentSession.deadline);
-            document.getElementById('deadlineInfo').textContent = 
-                '⏰ 마감: ' + deadline.toLocaleString('ko-KR');
+            document.getElementById('deadlineInfo').textContent = `마감: ${new Date(currentSession.deadline).toLocaleString('ko-KR')}`;
+            document.getElementById('currentOrderCount').textContent = currentSession.orders.length;
 
-            // 메뉴 목록 표시
             displayMenuList();
-            
-            // 기존 주문이 있으면 불러오기
+
             if (existingOrder) {
                 loadExistingOrder();
+            } else {
+                updateOrderSummary();
+            }
+        }
+
+        function getMenuItem(menuId) {
+            return currentSession.menu.find(item => String(item.id) === String(menuId));
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function getSelectedChoiceIds(menuId, groupId) {
+            return selectedOptions[menuId]?.[groupId] || [];
+        }
+
+        function renderOptionGroups(menuItem) {
+            const groups = menuItem.options || [];
+            if (groups.length === 0) {
+                return '';
             }
 
-            // 현재 주문 수 표시
-            document.getElementById('currentOrderCount').textContent = currentSession.orders.length;
+            return `
+                <div id="options-${menuItem.id}" class="menu-options-panel">
+                    ${groups.map(group => `
+                        <div class="option-group">
+                            <div class="option-group-title">
+                                <span>${escapeHtml(group.name)}</span>
+                                <span class="option-group-meta">${group.type === 'multiple' ? '복수 선택' : '1개 선택'}${group.required ? ' · 필수' : ''}</span>
+                            </div>
+                            <div class="option-choice-list">
+                                ${(group.choices || []).map(choice => {
+                                    const inputType = group.type === 'multiple' ? 'checkbox' : 'radio';
+                                    return `
+                                        <label class="option-choice">
+                                            <input
+                                                type="${inputType}"
+                                                name="option-${menuItem.id}-${group.id}"
+                                                value="${choice.id}"
+                                                onchange="toggleOptionSelection('${menuItem.id}', '${group.id}', '${choice.id}', '${group.type}')"
+                                            >
+                                            <span>${escapeHtml(choice.name)}</span>
+                                            <span class="option-choice-price">${choice.price > 0 ? `+${choice.price.toLocaleString()}원` : '추가금액 없음'}</span>
+                                        </label>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
         }
-        
+
+        function displayMenuList() {
+            const menuList = document.getElementById('menuList');
+            const sortedMenu = [...currentSession.menu].sort((a, b) => b.price - a.price);
+
+            menuList.innerHTML = sortedMenu.map(item => `
+                <div class="menu-item" id="menu-card-${item.id}">
+                    <div class="menu-item-main">
+                        <div class="menu-info">
+                            <span class="menu-name">${escapeHtml(item.name)}</span>
+                            <span class="menu-price">${item.price.toLocaleString()}원</span>
+                        </div>
+                        <div class="quantity-control">
+                            <button class="qty-btn" onclick="changeQuantity('${item.id}', -1)">-</button>
+                            <input
+                                type="number"
+                                id="qty-${item.id}"
+                                value="${selectedItems[item.id] || 0}"
+                                min="0"
+                                class="qty-input"
+                                onchange="updateQuantity('${item.id}', this.value)"
+                            >
+                            <button class="qty-btn" onclick="changeQuantity('${item.id}', 1)">+</button>
+                        </div>
+                    </div>
+                    ${renderOptionGroups(item)}
+                </div>
+            `).join('');
+
+            syncOptionInputs();
+        }
+
         function loadExistingOrder() {
-            // 기존 주문의 메뉴 항목들을 selectedItems에 채우기
             existingOrder.items.forEach(item => {
                 selectedItems[item.menuId] = item.quantity;
-                
-                // 수량 입력 필드에 값 설정
+                selectedOptions[item.menuId] = {};
+
+                (item.selectedOptions || []).forEach(group => {
+                    selectedOptions[item.menuId][group.groupId] = group.choiceIds || [];
+                });
+
                 const input = document.getElementById(`qty-${item.menuId}`);
                 if (input) {
                     input.value = item.quantity;
                 }
             });
-            
-            // 요청사항 채우기
+
             if (existingOrder.note) {
                 document.getElementById('orderNote').value = existingOrder.note;
             }
-            
-            // 주문 요약 업데이트
+
+            syncOptionInputs();
             updateOrderSummary();
-        }
-
-        function displayMenuList() {
-            const menuList = document.getElementById('menuList');
-            let html = '';
-
-            // 가격 내림차순 정렬 (비싼 것부터)
-            const sortedMenu = [...currentSession.menu].sort((a, b) => b.price - a.price);
-
-            sortedMenu.forEach(item => {
-                html += `
-                    <div class="menu-item">
-                        <div class="menu-info">
-                            <span class="menu-name">${item.name}</span>
-                            <span class="menu-price">${item.price.toLocaleString()}원</span>
-                        </div>
-                        <div class="quantity-control">
-                            <button class="qty-btn" onclick="changeQuantity('${item.id}', -1)">-</button>
-                            <input type="number" 
-                                   id="qty-${item.id}" 
-                                   value="0" 
-                                   min="0" 
-                                   class="qty-input"
-                                   onchange="updateQuantity('${item.id}', this.value)">
-                            <button class="qty-btn" onclick="changeQuantity('${item.id}', 1)">+</button>
-                        </div>
-                    </div>
-                `;
-            });
-
-            menuList.innerHTML = html;
         }
 
         function changeQuantity(menuId, delta) {
             const input = document.getElementById(`qty-${menuId}`);
-            const newValue = Math.max(0, parseInt(input.value || 0) + delta);
+            const newValue = Math.max(0, parseInt(input.value || 0, 10) + delta);
             input.value = newValue;
             updateQuantity(menuId, newValue);
         }
 
         function updateQuantity(menuId, quantity) {
-            quantity = parseInt(quantity) || 0;
-            if (quantity > 0) {
-                selectedItems[menuId] = quantity;
+            const nextQuantity = Math.max(0, parseInt(quantity || 0, 10));
+
+            if (nextQuantity > 0) {
+                selectedItems[menuId] = nextQuantity;
             } else {
                 delete selectedItems[menuId];
+                delete selectedOptions[menuId];
             }
+
+            syncOptionPanel(menuId);
             updateOrderSummary();
+        }
+
+        function syncOptionPanel(menuId) {
+            const panel = document.getElementById(`options-${menuId}`);
+            const card = document.getElementById(`menu-card-${menuId}`);
+            const isOpen = (selectedItems[menuId] || 0) > 0;
+
+            if (panel) {
+                panel.classList.toggle('is-open', isOpen);
+            }
+
+            if (card) {
+                card.classList.toggle('is-active', isOpen);
+            }
+        }
+
+        function syncOptionInputs() {
+            currentSession.menu.forEach(item => syncOptionPanel(item.id));
+
+            Object.entries(selectedOptions).forEach(([menuId, groupMap]) => {
+                Object.entries(groupMap).forEach(([groupId, choiceIds]) => {
+                    document.querySelectorAll(`input[name="option-${menuId}-${groupId}"]`).forEach(input => {
+                        input.checked = choiceIds.includes(input.value);
+                    });
+                });
+            });
+        }
+
+        function toggleOptionSelection(menuId, groupId, choiceId, groupType) {
+            if (!selectedOptions[menuId]) {
+                selectedOptions[menuId] = {};
+            }
+
+            const currentChoiceIds = getSelectedChoiceIds(menuId, groupId);
+
+            if (groupType === 'multiple') {
+                selectedOptions[menuId][groupId] = currentChoiceIds.includes(choiceId)
+                    ? currentChoiceIds.filter(id => id !== choiceId)
+                    : [...currentChoiceIds, choiceId];
+            } else {
+                selectedOptions[menuId][groupId] = [choiceId];
+            }
+
+            updateOrderSummary();
+        }
+
+        function collectMenuOptionSelection(menuItem) {
+            const groupSelections = [];
+            let optionUnitPrice = 0;
+
+            (menuItem.options || []).forEach(group => {
+                const selectedIds = getSelectedChoiceIds(menuItem.id, group.id);
+                const selectedChoices = (group.choices || []).filter(choice => selectedIds.includes(choice.id));
+
+                if (selectedChoices.length === 0) {
+                    return;
+                }
+
+                const extra = selectedChoices.reduce((sum, choice) => sum + (choice.price || 0), 0);
+                optionUnitPrice += extra;
+                groupSelections.push({
+                    groupId: group.id,
+                    groupName: group.name,
+                    choiceIds: selectedChoices.map(choice => choice.id),
+                    choices: selectedChoices.map(choice => ({
+                        id: choice.id,
+                        name: choice.name,
+                        price: choice.price || 0
+                    }))
+                });
+            });
+
+            return { groupSelections, optionUnitPrice };
+        }
+
+        function formatSelectedOptions(groupSelections) {
+            return groupSelections.map(group => `${group.groupName}: ${group.choices.map(choice => choice.name).join(', ')}`);
+        }
+
+        function validateRequiredOptions() {
+            for (const menuId of Object.keys(selectedItems)) {
+                const menuItem = getMenuItem(menuId);
+                if (!menuItem) continue;
+
+                for (const group of (menuItem.options || [])) {
+                    if (!group.required) continue;
+
+                    if (getSelectedChoiceIds(menuId, group.id).length === 0) {
+                        alert(`${menuItem.name}의 "${group.name}" 옵션을 선택해 주세요.`);
+                        return false;
+                    }
+                }
+            }
+
+            return true;
         }
 
         function updateOrderSummary() {
             const summaryDiv = document.getElementById('orderSummary');
             const totalPriceSpan = document.getElementById('totalPrice');
+            const menuIds = Object.keys(selectedItems);
 
-            if (Object.keys(selectedItems).length === 0) {
+            if (menuIds.length === 0) {
                 summaryDiv.innerHTML = '<p class="empty">아직 선택한 메뉴가 없습니다</p>';
                 totalPriceSpan.textContent = '0원';
                 return;
             }
 
-            let html = '<div class="summary-items">';
             let total = 0;
+            let html = '<div class="summary-items">';
 
-            for (let menuId in selectedItems) {
+            menuIds.forEach(menuId => {
                 const quantity = selectedItems[menuId];
-                const menuItem = currentSession.menu.find(m => m.id == menuId);
-                if (menuItem) {
-                    const itemTotal = menuItem.price * quantity;
-                    total += itemTotal;
-                    html += `
-                        <div class="summary-item">
-                            <span>${menuItem.name} x ${quantity}</span>
-                            <span>${itemTotal.toLocaleString()}원</span>
+                const menuItem = getMenuItem(menuId);
+                if (!menuItem) return;
+
+                const { groupSelections, optionUnitPrice } = collectMenuOptionSelection(menuItem);
+                const unitPrice = menuItem.price + optionUnitPrice;
+                const lineTotal = unitPrice * quantity;
+                total += lineTotal;
+
+                html += `
+                    <div class="summary-item">
+                        <div class="summary-item-main">
+                            <span>${escapeHtml(menuItem.name)} x ${quantity}</span>
+                            <span>${lineTotal.toLocaleString()}원</span>
                         </div>
-                    `;
-                }
-            }
+                        ${groupSelections.length > 0 ? `<div class="summary-item-options">${escapeHtml(formatSelectedOptions(groupSelections).join(' / '))}</div>` : ''}
+                    </div>
+                `;
+            });
 
             html += '</div>';
             summaryDiv.innerHTML = html;
-            totalPriceSpan.textContent = total.toLocaleString() + '원';
+            totalPriceSpan.textContent = `${total.toLocaleString()}원`;
         }
 
         async function submitOrder() {
             const orderNote = document.getElementById('orderNote').value.trim();
 
             if (Object.keys(selectedItems).length === 0 && !orderNote) {
-                alert('메뉴를 선택하거나 요청사항을 입력해주세요!');
+                alert('메뉴를 선택하거나 요청사항을 입력해 주세요.');
                 return;
             }
 
-            // 주문 데이터 생성
+            if (!validateRequiredOptions()) {
+                return;
+            }
+
             const orderItems = [];
             let totalPrice = 0;
 
-            for (let menuId in selectedItems) {
+            Object.keys(selectedItems).forEach(menuId => {
                 const quantity = selectedItems[menuId];
-                const menuItem = currentSession.menu.find(m => m.id == menuId);
-                if (menuItem) {
-                    orderItems.push({
-                        menuId: menuId,
-                        menuName: menuItem.name,
-                        price: menuItem.price,
-                        quantity: quantity
-                    });
-                    totalPrice += menuItem.price * quantity;
-                }
-            }
+                const menuItem = getMenuItem(menuId);
+                if (!menuItem) return;
+
+                const { groupSelections, optionUnitPrice } = collectMenuOptionSelection(menuItem);
+                const unitPrice = menuItem.price + optionUnitPrice;
+                const lineTotal = unitPrice * quantity;
+
+                orderItems.push({
+                    menuId,
+                    menuName: menuItem.name,
+                    price: menuItem.price,
+                    optionUnitPrice,
+                    unitPrice,
+                    quantity,
+                    selectedOptions: groupSelections
+                });
+
+                totalPrice += lineTotal;
+            });
 
             const order = {
                 id: existingOrder ? existingOrder.id : Date.now() + Math.random(),
                 userName: currentUserName,
                 items: orderItems,
-                totalPrice: totalPrice,
+                totalPrice,
                 note: orderNote,
                 timestamp: new Date().toISOString()
             };
 
-            // 세션에 주문 추가 또는 업데이트
             await updateOrderInSession(currentSession.id, currentUserName, order);
 
-            // 완료 알림
             const actionText = existingOrder ? '수정되었습니다' : '완료되었습니다';
-            alert(`주문이 ${actionText}!\n\n주문자: ${currentUserName}\n총 금액: ${totalPrice.toLocaleString()}원\n\n창을 닫으셔도 됩니다!`);
-            
-            // 폼 초기화
+            alert(`주문이 ${actionText}.\n\n주문자: ${currentUserName}\n총 금액: ${totalPrice.toLocaleString()}원`);
+
             document.getElementById('orderNote').value = '';
             selectedItems = {};
+            selectedOptions = {};
             existingOrder = null;
-            document.querySelectorAll('.qty-input').forEach(input => input.value = 0);
+            displayMenuList();
             updateOrderSummary();
 
-            // 주문 수 업데이트
             const updatedSession = await getSession(currentSession.id);
-            document.getElementById('currentOrderCount').textContent = updatedSession.orders.length;
+            if (updatedSession) {
+                currentSession = updatedSession;
+                document.getElementById('currentOrderCount').textContent = updatedSession.orders.length;
+            }
         }
-        
-        // 함수를 window에 등록 (HTML onclick에서 사용하기 위함)
+
         window.startOrder = startOrder;
         window.submitOrder = submitOrder;
         window.changeQuantity = changeQuantity;
+        window.toggleOptionSelection = toggleOptionSelection;
     </script>
 </body>
 </html>
-

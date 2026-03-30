@@ -1,92 +1,74 @@
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>관리자 페이지 - 메뉴담기</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
     <div class="container">
         <header>
-            <h1>🔧 관리자 페이지</h1>
-            <button class="btn btn-small" onclick="location.href='index.html'">홈으로</button>
+            <h1>관리자 페이지</h1>
+            <button class="btn btn-small" onclick="location.href='index.html'">처음으로</button>
         </header>
 
         <main>
-            <!-- 새 주문 세션 만들기 -->
             <div class="card">
-                <h2>새 주문 세션 만들기</h2>
+                <h2>주문 세션 만들기</h2>
 
                 <div class="form-group">
-                    <label>주문 이름 *</label>
-                    <input type="text" id="sessionName" placeholder="예: 오늘 저녁, 금요일 디저트">
+                    <label>세션 이름</label>
+                    <input type="text" id="sessionName" placeholder="예: 오늘 점심, 팀 회식">
                 </div>
 
                 <div class="form-group">
-                    <label>식당 이름 *</label>
+                    <label>식당 이름</label>
                     <input type="text" id="restaurantName" placeholder="예: 맘스터치, 교촌치킨">
                 </div>
 
                 <div class="form-group">
-                    <label>마감 시간 *</label>
+                    <label>마감 시간</label>
                     <input type="datetime-local" id="deadline">
                 </div>
 
                 <div class="form-group">
-                    <label>메뉴 입력 *</label>
+                    <label>메뉴 입력</label>
                     <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
-                        <button type="button" class="btn btn-small btn-secondary" onclick="showTemplateModal()">
-                            📁 템플릿 불러오기
-                        </button>
-                        <button type="button" class="btn btn-small btn-secondary" onclick="showPreviousMenus()">
-                            🔄 이전 메뉴 재사용
-                        </button>
-                        <button type="button" class="btn btn-small btn-secondary" onclick="saveAsTemplate()">
-                            💾 템플릿으로 저장
-                        </button>
-                        <button type="button" class="btn btn-small btn-secondary" onclick="smartParse()">
-                            🪄 자동 파싱
-                        </button>
+                        <button type="button" class="btn btn-small btn-secondary" onclick="showTemplateModal()">템플릿 불러오기</button>
+                        <button type="button" class="btn btn-small btn-secondary" onclick="showPreviousMenus()">이전 메뉴 불러오기</button>
+                        <button type="button" class="btn btn-small btn-secondary" onclick="saveAsTemplate()">템플릿 저장</button>
+                        <button type="button" class="btn btn-small btn-secondary" onclick="smartParse()">자동 파싱</button>
                     </div>
-                    <p class="hint">한 줄에 하나씩, "메뉴명|가격" 또는 "메뉴명 가격" 형식으로 입력하세요</p>
-                    <textarea id="menuInput" rows="10" placeholder="예시 1 (추천):
-싸이버거|5900
-통새우버거|6500
-딥치즈버거|5500
-
-예시 2 (자동 파싱):
-싸이버거 5900원
-통새우버거 6,500
-딥치즈버거 5500"></textarea>
+                    <p class="hint">한 줄에 하나씩 `메뉴명|가격` 형식으로 입력하세요.</p>
+                    <textarea id="menuInput" rows="10" placeholder="싸이버거|5900&#10;치즈버거|5200&#10;감자튀김|2500"></textarea>
                 </div>
 
                 <div class="form-group">
                     <label>메뉴 미리보기</label>
-                    <div id="menuPreview" class="menu-preview"></div>
+                    <div id="menuPreview" class="menu-preview">
+                        <p class="empty">메뉴를 입력하면 미리보기가 표시됩니다.</p>
+                    </div>
                 </div>
 
-                <button class="btn btn-primary btn-large" onclick="createSession()">
-                    주문 세션 생성하기
-                </button>
+                <div class="form-group">
+                    <label>메뉴 옵션 설정</label>
+                    <p class="hint">사용자가 메뉴를 고르면 아래에 펼쳐질 옵션 그룹을 메뉴별로 추가할 수 있어요.</p>
+                    <div id="menuOptionEditor" class="menu-option-editor">
+                        <p class="empty">메뉴를 먼저 입력해 주세요.</p>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-large" onclick="createSession()">주문 세션 생성</button>
             </div>
 
-            <!-- 기존 세션 목록 -->
             <div class="card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                    <h2 style="margin: 0;">내 주문 세션 목록</h2>
-                    <div style="display: flex; gap: 8px;">
-                        <button type="button" class="btn btn-small btn-secondary" onclick="exportData()">
-                            📥 데이터 백업
-                        </button>
-                        <button type="button" class="btn btn-small btn-secondary"
-                            onclick="document.getElementById('importFile').click()">
-                            📤 데이터 복원
-                        </button>
-                        <input type="file" id="importFile" accept=".json" style="display: none;"
-                            onchange="importData(event)">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 12px; flex-wrap: wrap;">
+                    <h2 style="margin: 0;">주문 세션 목록</h2>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <button type="button" class="btn btn-small btn-secondary" onclick="exportData()">데이터 백업</button>
+                        <button type="button" class="btn btn-small btn-secondary" onclick="document.getElementById('importFile').click()">데이터 복원</button>
+                        <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
                     </div>
                 </div>
                 <div id="sessionList"></div>
@@ -94,16 +76,13 @@
         </main>
     </div>
 
-    <!-- 템플릿/이전 메뉴 선택 모달 -->
     <div id="menuModal" class="modal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="modalTitle">메뉴 선택</h3>
-                <button class="modal-close" onclick="closeMenuModal()">✕</button>
+                <button class="modal-close" onclick="closeMenuModal()">×</button>
             </div>
-            <div class="modal-body" id="modalBody">
-                <!-- 동적으로 채워짐 -->
-            </div>
+            <div class="modal-body" id="modalBody"></div>
         </div>
     </div>
 
@@ -113,340 +92,509 @@
             getAllSessions,
             getSession,
             saveSession,
-            deleteSession,
-            updateSession,
-            formatDate,
-            formatPrice,
-            isSessionExpired,
-            getTimeRemaining,
             getAllTemplates,
             saveTemplate,
             deleteTemplate
         } from './firebase.js';
 
-        // ===== 데이터 백업/복원 기능 =====
+        let menuOptionDrafts = {};
 
-        async function exportData() {
-            const sessions = await getAllSessions();
-            const templates = getAllTemplates();
-
-            const backupData = {
-                version: '1.0',
-                exportDate: new Date().toISOString(),
-                sessions: sessions,
-                templates: templates
-            };
-
-            // JSON 파일로 다운로드
-            const dataStr = JSON.stringify(backupData, null, 2);
-            const blob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-
-            // 파일명: menudamgi_backup_2024-01-01.json
-            const today = new Date().toISOString().split('T')[0];
-            link.download = `menudamgi_backup_${today}.json`;
-
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-
-            alert(`데이터 백업 완료! 🎉\n\n세션: ${sessions.length}개\n템플릿: ${templates.length}개\n\n파일이 다운로드되었습니다.`);
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
         }
 
-        async function importData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+        function escapeForInline(value) {
+            return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        }
 
-            if (!file.name.endsWith('.json')) {
-                alert('JSON 파일만 업로드 가능합니다!');
-                return;
-            }
+        function parseMenuLines(menuText) {
+            return menuText
+                .split('\n')
+                .map(line => line.trim())
+                .filter(Boolean)
+                .map(line => {
+                    const parts = line.split('|');
+                    if (parts.length !== 2) return null;
 
-            const reader = new FileReader();
-            reader.onload = async function (e) {
-                try {
-                    const backupData = JSON.parse(e.target.result);
+                    const name = parts[0].trim();
+                    const price = parseInt(parts[1].replace(/,/g, '').trim(), 10);
 
-                    // 데이터 유효성 검사
-                    if (!backupData.sessions || !Array.isArray(backupData.sessions)) {
-                        throw new Error('올바르지 않은 백업 파일 형식입니다.');
-                    }
+                    if (!name || Number.isNaN(price)) return null;
+                    return { name, price };
+                })
+                .filter(Boolean);
+        }
 
-                    // 복원 확인
-                    const currentSessions = await getAllSessions();
-                    const currentTemplates = getAllTemplates();
+        function createEmptyOptionGroup() {
+            return {
+                id: `${Date.now()}-${Math.random()}`,
+                name: '',
+                type: 'single',
+                required: false,
+                choicesText: ''
+            };
+        }
 
-                    let message = `데이터를 복원하시겠습니까?\n\n`;
-                    message += `백업 파일:\n`;
-                    message += `- 세션: ${backupData.sessions.length}개\n`;
-                    message += `- 템플릿: ${backupData.templates ? backupData.templates.length : 0}개\n`;
-                    message += `- 백업 날짜: ${new Date(backupData.exportDate).toLocaleString('ko-KR')}\n\n`;
-                    message += `현재 데이터:\n`;
-                    message += `- 세션: ${currentSessions.length}개\n`;
-                    message += `- 템플릿: ${currentTemplates.length}개\n\n`;
-                    message += `⚠️ 기존 데이터에 추가됩니다!`;
+        function buildMenuOptions(menuName) {
+            return (menuOptionDrafts[menuName] || [])
+                .map(group => {
+                    const choices = group.choicesText
+                        .split('\n')
+                        .map(line => line.trim())
+                        .filter(Boolean)
+                        .map(line => {
+                            const [choiceNameRaw, choicePriceRaw = '0'] = line.split('|');
+                            const choiceName = choiceNameRaw?.trim();
+                            const choicePrice = parseInt(choicePriceRaw.replace(/,/g, '').trim(), 10);
 
-                    if (!confirm(message)) {
-                        event.target.value = ''; // 파일 선택 초기화
-                        return;
-                    }
-
-                    // 세션 복원 (중복 ID 체크)
-                    let importedSessions = 0;
-                    let skippedSessions = 0;
-
-                    for (const session of backupData.sessions) {
-                        const exists = await getSession(session.id);
-                        if (!exists) {
-                            await saveSession(session);
-                            importedSessions++;
-                        } else {
-                            skippedSessions++;
-                        }
-                    }
-
-                    // 템플릿 복원 (중복 ID 체크)
-                    let importedTemplates = 0;
-                    let skippedTemplates = 0;
-
-                    if (backupData.templates && Array.isArray(backupData.templates)) {
-                        for (const template of backupData.templates) {
-                            const templates = getAllTemplates();
-                            const exists = templates.find(t => t.id === template.id);
-                            if (!exists) {
-                                saveTemplate(template);
-                                importedTemplates++;
-                            } else {
-                                skippedTemplates++;
+                            if (!choiceName || Number.isNaN(choicePrice)) {
+                                return null;
                             }
-                        }
+
+                            return {
+                                id: `${group.id}-${choiceName}`,
+                                name: choiceName,
+                                price: choicePrice
+                            };
+                        })
+                        .filter(Boolean);
+
+                    if (!group.name.trim() || choices.length === 0) {
+                        return null;
                     }
 
-                    // 페이지 새로고침
-                    await loadSessions();
-
-                    let resultMessage = `데이터 복원 완료! 🎉\n\n`;
-                    resultMessage += `세션: ${importedSessions}개 추가`;
-                    if (skippedSessions > 0) resultMessage += ` (${skippedSessions}개 중복 제외)`;
-                    resultMessage += `\n템플릿: ${importedTemplates}개 추가`;
-                    if (skippedTemplates > 0) resultMessage += ` (${skippedTemplates}개 중복 제외)`;
-
-                    alert(resultMessage);
-
-                } catch (error) {
-                    alert('데이터 복원 실패! ❌\n\n' + error.message);
-                }
-
-                // 파일 선택 초기화
-                event.target.value = '';
-            };
-
-            reader.readAsText(file);
+                    return {
+                        id: `${menuName}-${group.id}`,
+                        name: group.name.trim(),
+                        type: group.type === 'multiple' ? 'multiple' : 'single',
+                        required: Boolean(group.required),
+                        choices
+                    };
+                })
+                .filter(Boolean);
         }
 
-        // ===== 메뉴 관리 기능 =====
+        function hydrateOptionDraftsFromMenu(menuItems) {
+            const nextDrafts = {};
 
-        // 자동 파싱 - 다양한 형식 지원
-        function smartParse() {
-            const input = document.getElementById('menuInput').value.trim();
-            if (!input) {
-                alert('메뉴 텍스트를 먼저 입력해주세요!');
-                return;
-            }
-
-            const lines = input.split('\n');
-            const parsed = [];
-
-            lines.forEach(line => {
-                line = line.trim();
-                if (!line) return;
-
-                // 이미 올바른 형식이면 그대로
-                if (line.includes('|')) {
-                    parsed.push(line);
-                    return;
-                }
-
-                // 다양한 패턴 매칭
-                // "싸이버거 5900원" or "싸이버거 5,900원" or "싸이버거 5900"
-                const patterns = [
-                    /^(.+?)\s+([0-9,]+)원?\s*$/,  // "메뉴명 5900원" or "메뉴명 5900"
-                    /^(.+?)\s*[:\-]\s*([0-9,]+)원?\s*$/,  // "메뉴명: 5900" or "메뉴명 - 5900"
-                ];
-
-                for (let pattern of patterns) {
-                    const match = line.match(pattern);
-                    if (match) {
-                        const name = match[1].trim();
-                        const price = match[2].replace(/,/g, '');
-                        parsed.push(`${name}|${price}`);
-                        return;
-                    }
-                }
-
-                // 매칭 안 되면 경고
-                console.warn('파싱 실패:', line);
+            menuItems.forEach(item => {
+                nextDrafts[item.name] = (item.options || []).map(group => ({
+                    id: group.id || `${Date.now()}-${Math.random()}`,
+                    name: group.name || '',
+                    type: group.type === 'multiple' ? 'multiple' : 'single',
+                    required: Boolean(group.required),
+                    choicesText: (group.choices || []).map(choice => `${choice.name}|${choice.price || 0}`).join('\n')
+                }));
             });
 
-            if (parsed.length > 0) {
-                document.getElementById('menuInput').value = parsed.join('\n');
-                alert(`${parsed.length}개 메뉴가 파싱되었습니다!`);
-            } else {
-                alert('파싱할 수 있는 메뉴가 없습니다.\n\n올바른 형식:\n- 싸이버거|5900\n- 싸이버거 5900\n- 싸이버거 5900원');
-            }
+            menuOptionDrafts = nextDrafts;
         }
 
-        // 이전 메뉴 재사용
-        async function showPreviousMenus() {
-            const sessions = await getAllSessions();
-            if (sessions.length === 0) {
-                alert('이전 주문 세션이 없습니다.');
+        function syncMenuOptionDrafts(menuItems) {
+            const nextDrafts = {};
+            menuItems.forEach(item => {
+                nextDrafts[item.name] = menuOptionDrafts[item.name] || [];
+            });
+            menuOptionDrafts = nextDrafts;
+        }
+
+        function renderMenuPreview(menuItems) {
+            const preview = document.getElementById('menuPreview');
+
+            if (menuItems.length === 0) {
+                preview.innerHTML = '<p class="empty">메뉴를 입력하면 미리보기가 표시됩니다.</p>';
                 return;
             }
 
-            let html = '<div class="menu-select-list">';
-            sessions.slice().reverse().forEach(session => {
-                const date = new Date(session.createdAt).toLocaleString('ko-KR', {
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-                html += `
-                    <div class="menu-select-item" onclick="window.loadMenuFromSession('${session.id}')">
-                        <div>
-                            <strong>${session.restaurant}</strong>
-                            <p style="font-size: 0.9rem; color: #666;">${session.name} - ${date}</p>
+            const sortedMenu = [...menuItems].sort((a, b) => b.price - a.price);
+            preview.innerHTML = `
+                <div class="menu-grid">
+                    ${sortedMenu.map(item => {
+                        const optionCount = buildMenuOptions(item.name).length;
+                        return `
+                            <div class="menu-item-preview">
+                                <div>
+                                    <span class="menu-name">${escapeHtml(item.name)}</span>
+                                    ${optionCount > 0 ? `<div class="menu-option-badge">${optionCount} option group(s)</div>` : ''}
+                                </div>
+                                <span class="menu-price">${item.price.toLocaleString()} KRW</span>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        function renderMenuOptionEditor(menuItems) {
+            const editor = document.getElementById('menuOptionEditor');
+
+            if (menuItems.length === 0) {
+                editor.innerHTML = '<p class="empty">메뉴를 먼저 입력해 주세요.</p>';
+                return;
+            }
+
+            editor.innerHTML = menuItems.map(item => {
+                const groups = menuOptionDrafts[item.name] || [];
+                const inlineName = escapeForInline(item.name);
+
+                return `
+                    <div class="menu-option-card">
+                        <div class="menu-option-card-header">
+                            <div>
+                                <strong>${escapeHtml(item.name)}</strong>
+                                <p>${item.price.toLocaleString()} KRW</p>
+                            </div>
+                            <button type="button" class="btn btn-small btn-secondary" onclick="addOptionGroup('${inlineName}')">Add group</button>
                         </div>
-                        <div style="text-align: right; color: #999;">
-                            ${session.menu.length}개 메뉴
+                        <div class="menu-option-group-list">
+                            ${groups.length === 0 ? '<p class="empty option-empty">No options yet.</p>' : groups.map(group => `
+                                <div class="menu-option-group">
+                                    <div class="menu-option-group-toolbar">
+                                        <strong>Option group</strong>
+                                        <button type="button" class="btn btn-small" onclick="removeOptionGroup('${inlineName}', '${group.id}')">Remove</button>
+                                    </div>
+                                    <div class="menu-option-fields">
+                                        <input type="text" value="${escapeHtml(group.name)}" placeholder="e.g. Spice, Topping, Side" oninput="updateOptionGroupField('${inlineName}', '${group.id}', 'name', this.value)">
+                                        <select onchange="updateOptionGroupField('${inlineName}', '${group.id}', 'type', this.value)">
+                                            <option value="single" ${group.type === 'single' ? 'selected' : ''}>Single select</option>
+                                            <option value="multiple" ${group.type === 'multiple' ? 'selected' : ''}>Multi select</option>
+                                        </select>
+                                        <label class="option-checkbox">
+                                            <input type="checkbox" ${group.required ? 'checked' : ''} onchange="updateOptionGroupField('${inlineName}', '${group.id}', 'required', this.checked)">
+                                            Required
+                                        </label>
+                                    </div>
+                                    <textarea rows="4" placeholder="One choice per line&#10;Regular|0&#10;Extra Cheese|500" oninput="updateOptionGroupField('${inlineName}', '${group.id}', 'choicesText', this.value)">${escapeHtml(group.choicesText)}</textarea>
+                                </div>
+                            `).join('')}
                         </div>
                     </div>
                 `;
-            });
-            html += '</div>';
+            }).join('');
+        }
 
-            document.getElementById('modalTitle').textContent = '이전 메뉴 불러오기';
-            document.getElementById('modalBody').innerHTML = html;
-            document.getElementById('menuModal').style.display = 'flex';
+        function refreshMenuBuilder() {
+            const menuItems = parseMenuLines(document.getElementById('menuInput').value);
+            syncMenuOptionDrafts(menuItems);
+            renderMenuPreview(menuItems);
+            renderMenuOptionEditor(menuItems);
+        }
+
+        function addOptionGroup(menuName) {
+            if (!menuOptionDrafts[menuName]) {
+                menuOptionDrafts[menuName] = [];
+            }
+
+            menuOptionDrafts[menuName].push(createEmptyOptionGroup());
+            refreshMenuBuilder();
+        }
+
+        function removeOptionGroup(menuName, groupId) {
+            menuOptionDrafts[menuName] = (menuOptionDrafts[menuName] || []).filter(group => group.id !== groupId);
+            refreshMenuBuilder();
+        }
+
+        function updateOptionGroupField(menuName, groupId, field, value) {
+            const group = (menuOptionDrafts[menuName] || []).find(item => item.id === groupId);
+            if (!group) return;
+
+            group[field] = value;
+            renderMenuPreview(parseMenuLines(document.getElementById('menuInput').value));
+        }
+
+        function smartParse() {
+            const input = document.getElementById('menuInput').value.trim();
+            if (!input) {
+                alert('메뉴 텍스트를 먼저 입력해 주세요.');
+                return;
+            }
+
+            const parsed = input
+                .split('\n')
+                .map(line => line.trim())
+                .filter(Boolean)
+                .map(line => {
+                    if (line.includes('|')) {
+                        return line;
+                    }
+
+                    const patterns = [
+                        /^(.+?)\s+([0-9,]+)원?$/,
+                        /^(.+?)\s*[:\-]\s*([0-9,]+)원?$/
+                    ];
+
+                    for (const pattern of patterns) {
+                        const match = line.match(pattern);
+                        if (match) {
+                            return `${match[1].trim()}|${match[2].replace(/,/g, '')}`;
+                        }
+                    }
+
+                    return null;
+                })
+                .filter(Boolean);
+
+            if (parsed.length === 0) {
+                alert('파싱할 수 있는 메뉴를 찾지 못했습니다.');
+                return;
+            }
+
+            document.getElementById('menuInput').value = parsed.join('\n');
+            refreshMenuBuilder();
+            alert(`${parsed.length}개 메뉴를 정리했습니다.`);
         }
 
         async function loadMenuFromSession(sessionId) {
             const session = await getSession(sessionId);
             if (!session) return;
 
-            const menuText = session.menu.map(m => `${m.name}|${m.price}`).join('\n');
-            document.getElementById('menuInput').value = menuText;
+            document.getElementById('menuInput').value = session.menu.map(item => `${item.name}|${item.price}`).join('\n');
             document.getElementById('restaurantName').value = session.restaurant;
-
+            hydrateOptionDraftsFromMenu(session.menu || []);
+            refreshMenuBuilder();
             closeMenuModal();
-            alert(`"${session.restaurant}" 메뉴를 불러왔습니다!\n필요하면 수정하고 사용하세요.`);
         }
 
-        // window에 등록
-        window.showPreviousMenus = showPreviousMenus;
-        window.loadMenuFromSession = loadMenuFromSession;
+        async function showPreviousMenus() {
+            const sessions = await getAllSessions();
+            if (sessions.length === 0) {
+                alert('이전에 만든 주문 세션이 없습니다.');
+                return;
+            }
 
-        // 템플릿으로 저장
+            document.getElementById('modalTitle').textContent = '이전 메뉴 불러오기';
+            document.getElementById('modalBody').innerHTML = `
+                <div class="menu-select-list">
+                    ${sessions.map(session => `
+                        <div class="menu-select-item" onclick="loadMenuFromSession('${session.id}')">
+                            <div>
+                                <strong>${escapeHtml(session.restaurant)}</strong>
+                                <p style="font-size: 0.9rem; color: #666;">${escapeHtml(session.name)} · ${new Date(session.createdAt).toLocaleString('ko-KR')}</p>
+                            </div>
+                            <div style="text-align: right; color: #999;">${session.menu.length}개 메뉴</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            document.getElementById('menuModal').style.display = 'flex';
+        }
+
         function saveAsTemplate() {
             const restaurantName = document.getElementById('restaurantName').value.trim();
-            const menuText = document.getElementById('menuInput').value.trim();
+            const menuItems = parseMenuLines(document.getElementById('menuInput').value);
 
-            if (!restaurantName || !menuText) {
-                alert('식당 이름과 메뉴를 먼저 입력해주세요!');
+            if (!restaurantName || menuItems.length === 0) {
+                alert('식당 이름과 메뉴를 먼저 입력해 주세요.');
                 return;
             }
 
-            const menuLines = menuText.split('\n').filter(line => line.trim());
-            const menu = [];
-
-            for (let line of menuLines) {
-                const parts = line.split('|');
-                if (parts.length === 2) {
-                    menu.push({
-                        name: parts[0].trim(),
-                        price: parseInt(parts[1].trim())
-                    });
-                }
-            }
-
-            if (menu.length === 0) {
-                alert('올바른 형식의 메뉴가 없습니다!');
-                return;
-            }
-
-            const template = {
+            saveTemplate({
                 id: Date.now(),
-                restaurantName: restaurantName,
-                menu: menu,
+                restaurantName,
+                menu: menuItems.map(item => ({
+                    name: item.name,
+                    price: item.price,
+                    options: buildMenuOptions(item.name)
+                })),
                 createdAt: new Date().toISOString()
-            };
+            });
 
-            saveTemplate(template);
-            alert(`"${restaurantName}" 템플릿이 저장되었습니다! 🎉`);
+            alert(`"${restaurantName}" 템플릿을 저장했습니다.`);
+        }
+
+        function loadTemplate(templateId) {
+            const template = getAllTemplates().find(item => item.id === templateId);
+            if (!template) return;
+
+            document.getElementById('menuInput').value = template.menu.map(item => `${item.name}|${item.price}`).join('\n');
+            document.getElementById('restaurantName').value = template.restaurantName;
+            hydrateOptionDraftsFromMenu(template.menu || []);
+            refreshMenuBuilder();
+            closeMenuModal();
+        }
+
+        function removeTemplate(templateId) {
+            if (!confirm('이 템플릿을 삭제할까요?')) return;
+
+            deleteTemplate(templateId);
+            showTemplateModal();
         }
 
         function showTemplateModal() {
             const templates = getAllTemplates();
-
             if (templates.length === 0) {
-                alert('저장된 템플릿이 없습니다.\n\n먼저 메뉴를 입력하고 "템플릿으로 저장" 버튼을 눌러주세요!');
+                alert('저장된 템플릿이 없습니다.');
                 return;
             }
 
-            let html = '<div class="menu-select-list">';
-            templates.slice().reverse().forEach(template => {
-                const date = new Date(template.createdAt).toLocaleString('ko-KR', {
-                    month: 'short',
-                    day: 'numeric'
-                });
-                html += `
-                    <div class="menu-select-item">
-                        <div onclick="loadTemplate(${template.id})" style="flex: 1; cursor: pointer;">
-                            <strong>${template.restaurantName}</strong>
-                            <p style="font-size: 0.9rem; color: #666;">${template.menu.length}개 메뉴 - ${date}</p>
-                        </div>
-                        <button class="btn btn-small" style="background: #f44336; color: white;" onclick="removeTemplate(${template.id})">
-                            삭제
-                        </button>
-                    </div>
-                `;
-            });
-            html += '</div>';
-
             document.getElementById('modalTitle').textContent = '템플릿 불러오기';
-            document.getElementById('modalBody').innerHTML = html;
+            document.getElementById('modalBody').innerHTML = `
+                <div class="menu-select-list">
+                    ${templates.slice().reverse().map(template => `
+                        <div class="menu-select-item">
+                            <div onclick="loadTemplate(${template.id})" style="flex: 1; cursor: pointer;">
+                                <strong>${escapeHtml(template.restaurantName)}</strong>
+                                <p style="font-size: 0.9rem; color: #666;">${template.menu.length}개 메뉴 · ${new Date(template.createdAt).toLocaleDateString('ko-KR')}</p>
+                            </div>
+                            <button class="btn btn-small" style="background: #f44336; color: white;" onclick="removeTemplate(${template.id})">삭제</button>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
             document.getElementById('menuModal').style.display = 'flex';
-        }
-
-        function loadTemplate(templateId) {
-            const templates = getAllTemplates();
-            const template = templates.find(t => t.id === templateId);
-            if (!template) return;
-
-            const menuText = template.menu.map(m => `${m.name}|${m.price}`).join('\n');
-            document.getElementById('menuInput').value = menuText;
-            document.getElementById('restaurantName').value = template.restaurantName;
-
-            closeMenuModal();
-            alert(`"${template.restaurantName}" 템플릿을 불러왔습니다!`);
-        }
-
-        function removeTemplate(templateId) {
-            if (!confirm('이 템플릿을 삭제하시겠습니까?')) return;
-
-            deleteTemplate(templateId);
-            showTemplateModal(); // 모달 새로고침
         }
 
         function closeMenuModal() {
             document.getElementById('menuModal').style.display = 'none';
         }
 
-        // 모달 외부 클릭시 닫기
+        async function createSession() {
+            const sessionName = document.getElementById('sessionName').value.trim();
+            const restaurantName = document.getElementById('restaurantName').value.trim();
+            const deadline = document.getElementById('deadline').value;
+            const menuItems = parseMenuLines(document.getElementById('menuInput').value);
+
+            if (!sessionName || !restaurantName || !deadline || menuItems.length === 0) {
+                alert('세션 이름, 식당 이름, 마감 시간, 메뉴를 모두 입력해 주세요.');
+                return;
+            }
+
+            const session = {
+                id: generateSessionCode(),
+                name: sessionName,
+                restaurant: restaurantName,
+                deadline,
+                menu: menuItems.map(item => ({
+                    id: `${Date.now()}-${Math.random()}`,
+                    name: item.name,
+                    price: item.price,
+                    options: buildMenuOptions(item.name)
+                })),
+                orders: [],
+                createdAt: new Date().toISOString()
+            };
+
+            await saveSession(session);
+            location.href = `dashboard.html?session=${session.id}`;
+        }
+
+        async function loadSessions() {
+            const sessions = await getAllSessions();
+            const listDiv = document.getElementById('sessionList');
+
+            if (sessions.length === 0) {
+                listDiv.innerHTML = '<p class="empty">아직 생성한 주문 세션이 없습니다.</p>';
+                return;
+            }
+
+            listDiv.innerHTML = `
+                <div class="session-grid">
+                    ${sessions.map(session => {
+                        const deadline = new Date(session.deadline);
+                        const expired = deadline < new Date();
+                        return `
+                            <div class="session-card ${expired ? 'expired' : 'active'}">
+                                <div class="session-header">
+                                    <h3>${escapeHtml(session.name)}</h3>
+                                    <span class="status-badge ${expired ? 'expired' : 'active'}">${expired ? '마감' : '진행중'}</span>
+                                </div>
+                                <p class="restaurant">식당: ${escapeHtml(session.restaurant)}</p>
+                                <p class="deadline">마감: ${deadline.toLocaleString('ko-KR')}</p>
+                                <p class="order-count">${session.orders.length}명 주문</p>
+                                <div class="session-actions">
+                                    <button class="btn btn-small btn-secondary" onclick="copyLink('${session.id}')">링크 복사</button>
+                                    <button class="btn btn-small btn-primary" onclick="location.href='dashboard.html?session=${session.id}'">대시보드</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        function copyLink(sessionId) {
+            let link;
+            if (window.location.protocol === 'file:') {
+                const currentPath = window.location.pathname;
+                const dirPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+                link = `file://${dirPath}/order.html?session=${sessionId}`;
+            } else {
+                const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+                link = `${window.location.origin}${basePath}order.html?session=${sessionId}`;
+            }
+
+            navigator.clipboard.writeText(link).then(() => {
+                alert('주문 링크를 복사했습니다.');
+            });
+        }
+
+        async function exportData() {
+            const sessions = await getAllSessions();
+            const templates = getAllTemplates();
+            const backupData = {
+                version: '2.0',
+                exportDate: new Date().toISOString(),
+                sessions,
+                templates
+            };
+
+            const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `menudamgi_backup_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        async function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                const text = await file.text();
+                const backupData = JSON.parse(text);
+
+                if (!Array.isArray(backupData.sessions)) {
+                    throw new Error('올바른 백업 파일이 아닙니다.');
+                }
+
+                for (const session of backupData.sessions) {
+                    const exists = await getSession(session.id);
+                    if (!exists) {
+                        await saveSession(session);
+                    }
+                }
+
+                for (const template of backupData.templates || []) {
+                    saveTemplate(template);
+                }
+
+                await loadSessions();
+                alert('데이터 복원이 완료되었습니다.');
+            } catch (error) {
+                alert(`복원에 실패했습니다.\n${error.message}`);
+            } finally {
+                event.target.value = '';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const now = new Date();
+            now.setHours(17, 0, 0, 0);
+            document.getElementById('deadline').value = now.toISOString().slice(0, 16);
+            document.getElementById('menuInput').addEventListener('input', refreshMenuBuilder);
+            loadSessions();
+            refreshMenuBuilder();
+        });
+
         window.onclick = function (event) {
             const modal = document.getElementById('menuModal');
             if (event.target === modal) {
@@ -454,184 +602,21 @@
             }
         };
 
-        // ===== 기존 코드 =====
-
-        // 메뉴 입력 실시간 미리보기
-        document.getElementById('menuInput').addEventListener('input', function () {
-            const menuText = this.value;
-            const preview = document.getElementById('menuPreview');
-            const lines = menuText.split('\n').filter(line => line.trim());
-
-            if (lines.length === 0) {
-                preview.innerHTML = '<p class="empty">메뉴가 없습니다</p>';
-                return;
-            }
-
-            // 메뉴 파싱 및 가격순 정렬
-            const menuItems = [];
-            lines.forEach(line => {
-                const parts = line.split('|');
-                if (parts.length === 2) {
-                    menuItems.push({
-                        name: parts[0].trim(),
-                        price: parseInt(parts[1].trim())
-                    });
-                }
-            });
-
-            // 가격 내림차순 정렬 (비싼 것부터)
-            menuItems.sort((a, b) => b.price - a.price);
-
-            let html = '<div class="menu-grid">';
-            menuItems.forEach(item => {
-                html += `
-                    <div class="menu-item-preview">
-                        <span class="menu-name">${item.name}</span>
-                        <span class="menu-price">${item.price.toLocaleString()}원</span>
-                    </div>
-                `;
-            });
-            html += '</div>';
-            preview.innerHTML = html;
-        });
-
-        // 세션 생성
-        async function createSession() {
-            const sessionName = document.getElementById('sessionName').value.trim();
-            const restaurantName = document.getElementById('restaurantName').value.trim();
-            const deadline = document.getElementById('deadline').value;
-            const menuText = document.getElementById('menuInput').value.trim();
-
-            if (!sessionName || !restaurantName || !deadline || !menuText) {
-                alert('모든 필수 항목을 입력해주세요!');
-                return;
-            }
-
-            // 메뉴 파싱
-            const menuLines = menuText.split('\n').filter(line => line.trim());
-            const menu = [];
-
-            for (let line of menuLines) {
-                const parts = line.split('|');
-                if (parts.length === 2) {
-                    menu.push({
-                        id: Date.now() + Math.random(),
-                        name: parts[0].trim(),
-                        price: parseInt(parts[1].trim())
-                    });
-                }
-            }
-
-            if (menu.length === 0) {
-                alert('올바른 형식의 메뉴를 최소 1개 이상 입력해주세요!');
-                return;
-            }
-
-            // 세션 생성
-            const session = {
-                id: generateSessionCode(),
-                name: sessionName,
-                restaurant: restaurantName,
-                deadline: deadline,
-                menu: menu,
-                orders: [],
-                createdAt: new Date().toISOString()
-            };
-
-            // 저장
-            await saveSession(session);
-
-            // 대시보드로 이동
-            location.href = `dashboard.html?session=${session.id}`;
-        }
-
-        // 세션 목록 로드
-        async function loadSessions() {
-            const sessions = await getAllSessions();
-            const listDiv = document.getElementById('sessionList');
-
-            if (sessions.length === 0) {
-                listDiv.innerHTML = '<p class="empty">아직 생성된 주문 세션이 없습니다.</p>';
-                return;
-            }
-
-            let html = '<div class="session-grid">';
-            sessions.forEach(session => {
-                const deadline = new Date(session.deadline);
-                const isExpired = deadline < new Date();
-                const statusClass = isExpired ? 'expired' : 'active';
-                const statusText = isExpired ? '마감됨' : '진행중';
-
-                html += `
-                    <div class="session-card ${statusClass}">
-                        <div class="session-header">
-                            <h3>${session.name}</h3>
-                            <span class="status-badge ${statusClass}">${statusText}</span>
-                        </div>
-                        <p class="restaurant">🍽️ ${session.restaurant}</p>
-                        <p class="deadline">⏰ ${deadline.toLocaleString('ko-KR')}</p>
-                        <p class="order-count">📋 ${session.orders.length}명 주문</p>
-                        <div class="session-actions">
-                            <button class="btn btn-small btn-secondary" onclick="copyLink('${session.id}')">
-                                링크 복사
-                            </button>
-                            <button class="btn btn-small btn-primary" onclick="location.href='dashboard.html?session=${session.id}'">
-                                대시보드
-                            </button>
-                        </div>
-                    </div>
-                `;
-            });
-            html += '</div>';
-            listDiv.innerHTML = html;
-        }
-
-        // copyLink를 window에 등록
-        window.copyLink = copyLink;
-
-        function copyLink(sessionId) {
-            let link;
-            if (window.location.protocol === 'file:') {
-                // file:// 프로토콜이면 전체 경로 사용
-                const currentPath = window.location.pathname;
-                const dirPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
-                link = `file://${dirPath}/order.html?session=${sessionId}`;
-            } else {
-                // http:// 또는 https:// 프로토콜
-                const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
-                link = `${window.location.origin}${basePath}order.html?session=${sessionId}`;
-            }
-
-            navigator.clipboard.writeText(link).then(() => {
-                if (window.location.protocol === 'file:') {
-                    alert('⚠️ 로컬 파일 모드입니다!\n\n링크가 복사되었지만, file:// 링크는 같은 컴퓨터에서만 작동합니다.\n\n팀원들과 공유하려면:\n1. GitHub Pages 배포 (추천!)\n2. 로컬 서버 실행 (http://localhost:8000)');
-                } else {
-                    alert('링크가 복사되었습니다!\n카톡으로 팀원들에게 공유하세요 📤');
-                }
-            });
-        }
-
-        // 기본 마감시간 설정 (오늘 오후 5시)
-        window.addEventListener('DOMContentLoaded', () => {
-            const now = new Date();
-            now.setHours(17, 0, 0, 0);
-            document.getElementById('deadline').value = now.toISOString().slice(0, 16);
-
-            // 세션 목록 로드
-            loadSessions();
-        });
-
-        // 모든 함수를 window에 등록 (HTML onclick에서 사용하기 위함)
-        window.createSession = createSession;
+        window.smartParse = smartParse;
+        window.showPreviousMenus = showPreviousMenus;
+        window.loadMenuFromSession = loadMenuFromSession;
         window.saveAsTemplate = saveAsTemplate;
         window.showTemplateModal = showTemplateModal;
         window.loadTemplate = loadTemplate;
         window.removeTemplate = removeTemplate;
         window.closeMenuModal = closeMenuModal;
-        window.smartParse = smartParse;
+        window.createSession = createSession;
+        window.copyLink = copyLink;
         window.exportData = exportData;
         window.importData = importData;
+        window.addOptionGroup = addOptionGroup;
+        window.removeOptionGroup = removeOptionGroup;
+        window.updateOptionGroupField = updateOptionGroupField;
     </script>
 </body>
-
 </html>

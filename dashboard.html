@@ -9,17 +9,16 @@
 <body>
     <div class="container">
         <header>
-            <h1>📊 주문 현황 대시보드</h1>
+            <h1>주문 현황 대시보드</h1>
             <button class="btn btn-small" onclick="location.href='admin.html'">관리자 페이지</button>
         </header>
 
         <main id="dashboardMain">
             <div id="loading" class="loading">
-                <p>주문 현황을 불러오는 중...</p>
+                <p>주문 현황을 불러오는 중입니다...</p>
             </div>
 
             <div id="dashboard" style="display: none;">
-                <!-- 세션 정보 -->
                 <div class="card session-info-card">
                     <h2 id="sessionTitle"></h2>
                     <p class="restaurant" id="restaurantName"></p>
@@ -35,34 +34,27 @@
                         </div>
                     </div>
                     <div class="dashboard-actions">
-                        <button class="btn btn-secondary" onclick="copyLink()">
-                            📤 주문 링크 복사
-                        </button>
-                        <button class="btn btn-primary" onclick="copyOrderSummary()">
-                            📋 주문 내역 복사
-                        </button>
+                        <button class="btn btn-secondary" onclick="copyLink()">주문 링크 복사</button>
+                        <button class="btn btn-primary" onclick="copyOrderSummary()">주문 내역 복사</button>
                     </div>
                 </div>
 
-                <!-- 메뉴별 집계 -->
                 <div class="card">
-                    <h3>📊 메뉴별 주문 집계</h3>
+                    <h3>메뉴별 집계</h3>
                     <div id="menuSummary" class="menu-summary"></div>
                 </div>
 
-                <!-- 개별 주문 목록 -->
                 <div class="card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                        <h3 style="margin: 0;">👥 개별 주문 내역 (<span id="orderCount">0</span>명)</h3>
-                        <input type="text" id="searchName" placeholder="🔍 이름 검색..." style="padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 8px; width: 200px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 12px; flex-wrap: wrap;">
+                        <h3 style="margin: 0;">개별 주문 내역 (<span id="orderCount">0</span>명)</h3>
+                        <input type="text" id="searchName" placeholder="이름 검색" style="padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 8px; width: 220px;">
                     </div>
                     <div id="orderList" class="order-list"></div>
                 </div>
 
-                <!-- 배민용 주문 텍스트 -->
                 <div class="card">
-                    <h3>📝 배민 주문용 텍스트</h3>
-                    <p class="hint">아래 텍스트를 복사해서 배민 "함께주문" 채팅에 붙여넣으세요</p>
+                    <h3>복사용 주문 텍스트</h3>
+                    <p class="hint">복사해서 메신저나 정산 메시지에 바로 붙여 넣을 수 있어요.</p>
                     <textarea id="orderText" class="order-text" readonly></textarea>
                 </div>
             </div>
@@ -71,7 +63,7 @@
 
     <script type="module">
         import { getSession } from './firebase.js';
-        
+
         let currentSession = null;
 
         window.addEventListener('DOMContentLoaded', async () => {
@@ -92,47 +84,74 @@
             }
 
             displayDashboard();
+
+            const searchInput = document.getElementById('searchName');
+            searchInput.addEventListener('input', (event) => {
+                displayOrderList(event.target.value);
+            });
         });
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function formatOptionSummary(item) {
+            if (!item.selectedOptions || item.selectedOptions.length === 0) {
+                return '';
+            }
+
+            return item.selectedOptions
+                .map(group => `${group.groupName}: ${group.choices.map(choice => choice.name).join(', ')}`)
+                .join(' / ');
+        }
+
+        function getLineTotal(item) {
+            if (typeof item.unitPrice === 'number') {
+                return item.unitPrice * item.quantity;
+            }
+
+            if (typeof item.optionUnitPrice === 'number') {
+                return (item.price + item.optionUnitPrice) * item.quantity;
+            }
+
+            return item.price * item.quantity;
+        }
 
         function displayDashboard() {
             document.getElementById('loading').style.display = 'none';
             document.getElementById('dashboard').style.display = 'block';
 
-            // 세션 정보
             document.getElementById('sessionTitle').textContent = currentSession.name;
-            document.getElementById('restaurantName').textContent = '🍽️ ' + currentSession.restaurant;
-            
+            document.getElementById('restaurantName').textContent = `식당: ${currentSession.restaurant}`;
+
             const deadline = new Date(currentSession.deadline);
             const isExpired = deadline < new Date();
-            const deadlineText = isExpired ? '⏰ 마감됨: ' : '⏰ 마감: ';
-            document.getElementById('deadlineInfo').textContent = deadlineText + deadline.toLocaleString('ko-KR');
+            document.getElementById('deadlineInfo').textContent = `${isExpired ? '마감됨' : '마감'}: ${deadline.toLocaleString('ko-KR')}`;
 
-            // 통계
             const totalOrders = currentSession.orders.length;
             const totalAmount = currentSession.orders.reduce((sum, order) => sum + order.totalPrice, 0);
-            
-            document.getElementById('totalOrders').textContent = totalOrders + '명';
-            document.getElementById('totalAmount').textContent = totalAmount.toLocaleString() + '원';
 
-            // 메뉴별 집계
+            document.getElementById('totalOrders').textContent = `${totalOrders}명`;
+            document.getElementById('totalAmount').textContent = `${totalAmount.toLocaleString()}원`;
+
             displayMenuSummary();
-
-            // 개별 주문 목록
-            displayOrderList();
-
-            // 배민용 텍스트
+            displayOrderList(document.getElementById('searchName')?.value || '');
             generateOrderText();
         }
 
         function displayMenuSummary() {
             const menuSummaryDiv = document.getElementById('menuSummary');
-            
+
             if (currentSession.orders.length === 0) {
                 menuSummaryDiv.innerHTML = '<p class="empty">아직 주문이 없습니다</p>';
                 return;
             }
 
-            // 메뉴별로 수량 집계
             const menuCount = {};
             currentSession.orders.forEach(order => {
                 order.items.forEach(item => {
@@ -140,30 +159,28 @@
                         menuCount[item.menuName] = {
                             name: item.menuName,
                             quantity: 0,
-                            price: item.price
+                            amount: 0
                         };
                     }
+
                     menuCount[item.menuName].quantity += item.quantity;
+                    menuCount[item.menuName].amount += getLineTotal(item);
                 });
             });
 
-            // 정렬 (수량 많은 순)
             const sortedMenu = Object.values(menuCount).sort((a, b) => b.quantity - a.quantity);
 
-            let html = '<div class="summary-grid">';
-            sortedMenu.forEach(item => {
-                const total = item.price * item.quantity;
-                html += `
-                    <div class="summary-card">
-                        <div class="summary-name">${item.name}</div>
-                        <div class="summary-quantity">${item.quantity}개</div>
-                        <div class="summary-price">${total.toLocaleString()}원</div>
-                    </div>
-                `;
-            });
-            html += '</div>';
-
-            menuSummaryDiv.innerHTML = html;
+            menuSummaryDiv.innerHTML = `
+                <div class="summary-grid">
+                    ${sortedMenu.map(item => `
+                        <div class="summary-card">
+                            <div class="summary-name">${escapeHtml(item.name)}</div>
+                            <div class="summary-quantity">${item.quantity}개</div>
+                            <div class="summary-price">${item.amount.toLocaleString()}원</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
         }
 
         function displayOrderList(searchTerm = '') {
@@ -176,65 +193,63 @@
                 return;
             }
 
-            // 검색 필터링
             let filteredOrders = currentSession.orders;
             if (searchTerm) {
-                filteredOrders = currentSession.orders.filter(order => 
+                filteredOrders = currentSession.orders.filter(order =>
                     order.userName.toLowerCase().includes(searchTerm.toLowerCase())
                 );
             }
 
-            orderCountSpan.textContent = currentSession.orders.length;
+            orderCountSpan.textContent = String(currentSession.orders.length);
 
             if (filteredOrders.length === 0) {
                 orderListDiv.innerHTML = '<p class="empty">검색 결과가 없습니다</p>';
                 return;
             }
 
-            let html = '';
-            filteredOrders.forEach((order, index) => {
+            orderListDiv.innerHTML = filteredOrders.map(order => {
                 const timestamp = new Date(order.timestamp).toLocaleString('ko-KR', {
                     month: 'short',
                     day: 'numeric',
                     hour: '2-digit',
                     minute: '2-digit'
                 });
-                
-                // 이름 하이라이트
-                let displayName = order.userName;
+
+                let displayName = escapeHtml(order.userName);
                 if (searchTerm) {
                     const regex = new RegExp(`(${searchTerm})`, 'gi');
                     displayName = displayName.replace(regex, '<mark style="background: #ffeb3b; padding: 2px 4px; border-radius: 3px;">$1</mark>');
                 }
 
-                html += `
-                    <div class="order-card" data-name="${order.userName.toLowerCase()}">
+                return `
+                    <div class="order-card" data-name="${escapeHtml(order.userName.toLowerCase())}">
                         <div class="order-header">
                             <h4>${displayName}</h4>
-                            <span class="order-time">📅 ${timestamp}</span>
+                            <span class="order-time">${timestamp}</span>
                         </div>
                         <div class="order-items">
                             ${order.items.map(item => `
                                 <div class="order-item">
-                                    <span><strong>${item.menuName}</strong> x ${item.quantity}</span>
-                                    <span style="color: #4CAF50; font-weight: 600;">${(item.price * item.quantity).toLocaleString()}원</span>
+                                    <div>
+                                        <span><strong>${escapeHtml(item.menuName)}</strong> x ${item.quantity}</span>
+                                        ${formatOptionSummary(item) ? `<div class="summary-item-options">${escapeHtml(formatOptionSummary(item))}</div>` : ''}
+                                    </div>
+                                    <span style="color: #4CAF50; font-weight: 600;">${getLineTotal(item).toLocaleString()}원</span>
                                 </div>
                             `).join('')}
                         </div>
-                        ${order.note ? `<div class="order-note">💬 ${order.note}</div>` : ''}
+                        ${order.note ? `<div class="order-note">요청: ${escapeHtml(order.note)}</div>` : ''}
                         <div class="order-total">
                             <strong>합계: ${order.totalPrice.toLocaleString()}원</strong>
                         </div>
                     </div>
                 `;
-            });
-
-            orderListDiv.innerHTML = html;
+            }).join('');
         }
 
         function generateOrderText() {
             const textarea = document.getElementById('orderText');
-            
+
             if (currentSession.orders.length === 0) {
                 textarea.value = '아직 주문이 없습니다.';
                 return;
@@ -243,9 +258,8 @@
             let text = `[${currentSession.name}]\n`;
             text += `${currentSession.restaurant}\n`;
             text += `마감: ${new Date(currentSession.deadline).toLocaleString('ko-KR')}\n\n`;
-            text += `=== 메뉴별 주문 ===\n`;
+            text += '=== 메뉴별 주문 ===\n';
 
-            // 메뉴별 집계
             const menuCount = {};
             currentSession.orders.forEach(order => {
                 order.items.forEach(item => {
@@ -260,16 +274,21 @@
                 text += `${menuName}: ${menuCount[menuName]}개\n`;
             });
 
-            text += `\n=== 개별 주문 ===\n`;
+            text += '\n=== 개별 주문 ===\n';
             currentSession.orders.forEach(order => {
                 text += `\n${order.userName}:\n`;
                 order.items.forEach(item => {
-                    text += `  - ${item.menuName} x ${item.quantity}\n`;
+                    text += `  - ${item.menuName} x ${item.quantity}`;
+                    const optionText = formatOptionSummary(item);
+                    if (optionText) {
+                        text += ` (${optionText})`;
+                    }
+                    text += `\n`;
                 });
                 if (order.note) {
                     text += `  요청: ${order.note}\n`;
                 }
-                text += `  (${order.totalPrice.toLocaleString()}원)\n`;
+                text += `  합계: ${order.totalPrice.toLocaleString()}원\n`;
             });
 
             const totalAmount = currentSession.orders.reduce((sum, order) => sum + order.totalPrice, 0);
@@ -282,22 +301,16 @@
         function copyLink() {
             let link;
             if (window.location.protocol === 'file:') {
-                // file:// 프로토콜이면 전체 경로 사용
                 const currentPath = window.location.pathname;
                 const dirPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
                 link = `file://${dirPath}/order.html?session=${currentSession.id}`;
             } else {
-                // http:// 또는 https:// 프로토콜
                 const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
                 link = `${window.location.origin}${basePath}order.html?session=${currentSession.id}`;
             }
-            
+
             navigator.clipboard.writeText(link).then(() => {
-                if (window.location.protocol === 'file:') {
-                    alert('⚠️ 로컬 파일 모드입니다!\n\n링크가 복사되었지만, file:// 링크는 같은 컴퓨터에서만 작동합니다.\n\n팀원들과 공유하려면:\n1. GitHub Pages 배포 (추천!)\n2. 로컬 서버 실행 (http://localhost:8000)');
-                } else {
-                    alert('주문 링크가 복사되었습니다!\n카톡으로 팀원들에게 공유하세요 📤');
-                }
+                alert('주문 링크를 복사했습니다.');
             });
         }
 
@@ -305,39 +318,22 @@
             const textarea = document.getElementById('orderText');
             textarea.select();
             navigator.clipboard.writeText(textarea.value).then(() => {
-                alert('주문 내역이 복사되었습니다!\n배민 채팅에 붙여넣으세요 📋');
+                alert('주문 내역을 복사했습니다.');
             });
         }
 
-        // 검색 기능
-        document.addEventListener('DOMContentLoaded', () => {
-            const searchInput = document.getElementById('searchName');
-            if (searchInput) {
-                searchInput.addEventListener('input', (e) => {
-                    displayOrderList(e.target.value);
-                });
-            }
-        });
-
-        // 자동 새로고침 (30초마다)
         setInterval(async () => {
+            if (!currentSession?.id) return;
+
             const updatedSession = await getSession(currentSession.id);
-            if (updatedSession) {
-                currentSession = updatedSession;
-                const searchTerm = document.getElementById('searchName')?.value || '';
-                displayDashboard();
-                // 검색어가 있으면 유지
-                if (searchTerm) {
-                    document.getElementById('searchName').value = searchTerm;
-                    displayOrderList(searchTerm);
-                }
-            }
+            if (!updatedSession) return;
+
+            currentSession = updatedSession;
+            displayDashboard();
         }, 30000);
-        
-        // 함수를 window에 등록 (HTML onclick에서 사용하기 위함)
+
         window.copyLink = copyLink;
         window.copyOrderSummary = copyOrderSummary;
     </script>
 </body>
 </html>
-

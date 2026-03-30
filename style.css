@@ -250,6 +250,86 @@ header .btn:hover {
     font-weight: 700;
 }
 
+.menu-option-badge {
+    margin-top: 6px;
+    font-size: 0.8rem;
+    color: var(--secondary-color);
+    font-weight: 600;
+}
+
+.menu-option-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.menu-option-card {
+    background: var(--bg-light);
+    border-radius: var(--radius-md);
+    padding: 16px;
+}
+
+.menu-option-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.menu-option-card-header p {
+    margin: 4px 0 0;
+}
+
+.menu-option-group-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.menu-option-group {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 12px;
+}
+
+.menu-option-group-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.menu-option-fields {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 170px 120px;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.menu-option-fields input,
+.menu-option-fields select,
+.menu-option-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font: inherit;
+}
+
+.option-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+}
+
+.option-empty {
+    padding: 12px 0;
+}
+
 /* 세션 그리드 */
 .session-grid {
     display: grid;
@@ -369,17 +449,25 @@ header .btn:hover {
 }
 
 .menu-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     padding: 16px;
     background: var(--bg-light);
     border-radius: var(--radius-md);
-    transition: background 0.2s ease;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
 }
 
 .menu-item:hover {
     background: #e8f5e9;
+}
+
+.menu-item.is-active {
+    box-shadow: inset 0 0 0 2px rgba(76, 175, 80, 0.18);
+}
+
+.menu-item-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
 }
 
 .menu-info {
@@ -423,6 +511,69 @@ header .btn:hover {
     font-weight: 600;
 }
 
+.menu-options-panel {
+    display: none;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.menu-options-panel.is-open {
+    display: block;
+}
+
+.option-group {
+    background: white;
+    border-radius: var(--radius-md);
+    padding: 14px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.option-group + .option-group {
+    margin-top: 10px;
+}
+
+.option-group-title {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.option-group-meta {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    font-weight: 600;
+}
+
+.option-choice-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.option-choice {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-light);
+    cursor: pointer;
+}
+
+.option-choice input {
+    margin: 0;
+}
+
+.option-choice-price {
+    margin-left: auto;
+    color: var(--secondary-color);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
 /* 주문 요약 */
 .order-summary {
     margin-bottom: 16px;
@@ -435,10 +586,21 @@ header .btn:hover {
 }
 
 .summary-item {
-    display: flex;
-    justify-content: space-between;
     padding: 8px 0;
     border-bottom: 1px solid var(--border-color);
+}
+
+.summary-item-main {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-weight: 600;
+}
+
+.summary-item-options {
+    margin-top: 6px;
+    color: var(--text-secondary);
+    font-size: 0.92rem;
 }
 
 .total-price {
@@ -663,6 +825,10 @@ footer {
     }
 
     .menu-item {
+        padding: 14px;
+    }
+
+    .menu-item-main {
         flex-direction: column;
         align-items: flex-start;
         gap: 12px;
@@ -671,6 +837,17 @@ footer {
     .quantity-control {
         width: 100%;
         justify-content: flex-end;
+    }
+
+    .menu-option-card-header,
+    .menu-option-group-toolbar,
+    .option-group-title {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .menu-option-fields {
+        grid-template-columns: 1fr;
     }
 }
 
